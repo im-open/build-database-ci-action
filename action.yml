@@ -1,22 +1,25 @@
-name: 'Composite Run Steps Action Template'
+name: Build SQL Database
 
-description: 'Add description here'
+description: Build a SQL Database with Flyway
 
 inputs:
-  input-1:
-    description: 'Add a description here'
+  db-server-name:
+    description: The name of the database server to build the database on.
     required: true
-
-outputs:
-  output-1:
-    description: 'Add description here'
-    value: '${{ steps.step_1.outputs.world }}'
+  db-name:
+    description: The name of the database to bubild.
+    required: true
+  additional-build-params:
+    description: A string containing any additional build parameters that will be tacked on to the end of the powershell run command
+    required: false
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
-    - name: Step 1
-      id: step_1
-      shell: bash
-      run: |
-        echo "::set-output name=hello::world"
+    - name: Install Database Dependencies
+      shell: pwsh
+      run: ${{ github.action_path }}/scripts/installpowershelldependencies.ps1
+
+    - name: Build Database
+      shell: pwsh
+      run: ${{ github.action_path }}/scripts/build-flyway.ps1 -dbServerName "${{ inputs.db-server-name }}" -dbName "${{ inputs.db-name }}" ${{ inputs.additional-build-params }}
