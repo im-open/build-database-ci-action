@@ -1,13 +1,16 @@
 # build-database-ci-action
 
-This action uses [Flyway](https://flywaydb.org/) to spin up the specified database, run your migration scripts against it, and run your tests.
+This action uses [Flyway](https://flywaydb.org/) to spin up the specified database, run your migration scripts against it, and run your [tSQLt](https://tsqlt.org/) tests.
 
 ## Inputs
-| Parameter                 | Is Required  | Description           |
-| --------------------------|--------------|-----------------------|
-| `db-server-name`          | true         | The name of the database server to build the database on. |
-| `db-name`                 | true         | The name of the database to build. |
-| `additional-build-params` | false        | A string containing any additional build parameters that will be tacked on to the end of the powershell run command. The other available parameters are the switch `incremental`, to prevent the dropping of the database before building, and the switch `runTests`. |
+| Parameter                       | Is Required  | Default | Description  |
+| --------------------------------|--------------|---------|--------------|
+| `db-server-name`                | true         | N/A     |The name of the database server to build the database on. |
+| `db-name`                       | true         | N/A     |The name of the database to build. |
+| `install-mock-db-objects`       | false        | false   |Specifies whether mock db objects should be used to fill out dependencies. |
+| `mock-db-object-nuget-feed-url` | false        | N/A     |The url to the nuget feed containing the mock database objects. This should be set if the install-mock-db-objects flag is set. |
+| `incremental`                   | false        | false   |Specifies whether to drop and recreate the database before building, or apply to the current database. |
+| `run-tests`                     | false        | false   |Specifies whether or not to run tSQLt tests. |
 
 ## Example
 
@@ -28,7 +31,10 @@ jobs:
         with:
           db-server-name: localhost
           db-name: MyLocalDB
-          additional-build-params: -runTests -incremental
+          install-mock-db-objects: true
+          mock-db-object-nuget-feed-url: https://www.nuget.org/
+          incremental: false
+          run-tests: true
 ```
 
 

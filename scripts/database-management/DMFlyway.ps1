@@ -69,6 +69,7 @@ function Invoke-DatabaseBuild {
         [switch]$seedData = $false,
         [switch]$runAllMigrations,
         [switch]$installMockDbObjects,
+        [string]$mockDbObjectNugetFeedUrl,
         [string]$queryTimeout
     )
     Clear-DmConfigCache
@@ -107,7 +108,7 @@ function Invoke-DatabaseBuild {
     if ($installMockDbObjects) {
         $dependenciesOutputFolder = Join-Path $projectRoot (Get-DMCOnfig -projectRoot $projectRoot).paths.dependenciesOutputFolder
         $dependenciesFile = Join-Path $projectRoot (Get-DMCOnfig -projectRoot $projectRoot).paths.dependencies -Resolve
-        Install-DbObjectDependencies -dependenciesFile $dependenciesFile -outputFolder $dependenciesOutputFolder
+        Install-DbObjectDependencies -nugetFeedUrl $mockDbObjectNugetFeedUrl -dependenciesFile $dependenciesFile -outputFolder $dependenciesOutputFolder
         Get-ChildItem -Path $dependenciesOutputFolder -Recurse -Depth 1 -Filter *.sql | ForEach-Object {
             Invoke-SqlByFileName -scriptPath $_.FullName -hostName $hostName -port $port -targetDatabase $dbName -connectionDatabase $dbName
         }

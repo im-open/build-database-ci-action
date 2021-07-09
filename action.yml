@@ -9,9 +9,17 @@ inputs:
   db-name:
     description: The name of the database to bubild.
     required: true
-  additional-build-params:
-    description: A string containing any additional build parameters that will be tacked on to the end of the powershell run command
-    required: false
+  install-mock-db-objects:
+    description: Specifies whether mock db objects should be used to fill out dependencies.
+    default: false
+  mock-db-object-nuget-feed-url:
+    description: The url to the nuget feed containing the mock database objects. This should be set if the install-mock-db-objects flag is set.
+  incremental:
+    description: Specifies whether to drop and recreate the database before building, or apply to the current database.
+    default: false
+  run-tests:
+    description: Specifies whether or not to run tests.
+    default: false
 
 runs:
   using: "composite"
@@ -22,4 +30,8 @@ runs:
 
     - name: Build Database
       shell: pwsh
-      run: ${{ github.action_path }}/scripts/build-flyway.ps1 -dbServerName "${{ inputs.db-server-name }}" -dbName "${{ inputs.db-name }}" ${{ inputs.additional-build-params }}
+      run: |
+        ${{ github.action_path }}/scripts/build-flyway.ps1 -dbServerName "${{ inputs.db-server-name }}" `
+        -dbName "${{ inputs.db-name }}" -installMockDbObjects:$${{ inputs.install-mock-db-objects }} `
+        -mockDbObjectNugetFeedUrl "${{ inputs.mock-db-object-nuget-feed-url }}" `
+        -incremental:$${{ inputs.incremental }} -runTests:$${{ inputs.run-tests }}
