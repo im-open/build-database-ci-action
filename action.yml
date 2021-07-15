@@ -20,6 +20,9 @@ inputs:
   run-tests:
     description: Specifies whether or not to run tests.
     default: false
+  drop-db-after-build:
+    description: Specifies whether or not to drop the database after building. Set this to false if other steps in the job rely on the database existing.
+    default: true
 
 runs:
   using: "composite"
@@ -34,4 +37,5 @@ runs:
         ${{ github.action_path }}/scripts/build-flyway.ps1 -dbServerName "${{ inputs.db-server-name }}" `
         -dbName "${{ inputs.db-name }}" -installMockDbObjects:$${{ inputs.install-mock-db-objects }} `
         -mockDbObjectNugetFeedUrl "${{ inputs.mock-db-object-nuget-feed-url }}" `
-        -incremental:$${{ inputs.incremental }} -runTests:$${{ inputs.run-tests }}
+        -incremental:$${{ inputs.incremental }} -runTests:$${{ inputs.run-tests }} `
+        -dropDbAfterBuild:$${{ inputs.drop-db-after-build }}

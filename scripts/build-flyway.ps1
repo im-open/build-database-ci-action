@@ -3,6 +3,7 @@ param(
     [switch]$runTests, #Dictates whether or not the tests are run
     [string]$dbName,
     [switch]$installMockDbObjects,
+    [switch]$dropDbAfterBuild,
     [string]$mockDbObjectNugetFeedUrl,
     [string]$dbServerName = "localhost"
 )
@@ -54,6 +55,6 @@ Write-Host "Building database..."
 
 # Dot source the DMFlyway file so its functions can be used
 . $PSScriptRoot\database-management\DMFlyway.ps1
-Invoke-DatabaseBuild -incremental:$incremental -runTests:$runTests -runAllMigrations -hostName $dbServerName -installMockDbObjects:$installMockDbObjects -mockDbObjectNugetFeedUrl $mockDbObjectNugetFeedUrl -seedData -dropDbAfterBuild
+Invoke-DatabaseBuild -incremental:$incremental -runTests:$runTests -runAllMigrations -hostName $dbServerName -installMockDbObjects:$installMockDbObjects -mockDbObjectNugetFeedUrl $mockDbObjectNugetFeedUrl -seedData -dropDbAfterBuild:$dropDbAfterBuild
 
 # $VerbosePreference = $oldverbose
