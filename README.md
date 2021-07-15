@@ -30,7 +30,7 @@ jobs:
           version: 7.2.0
 
       - name: Build Database
-        uses: im-open/build-database-ci-action@v1.0.0
+        uses: im-open/build-database-ci-action@v1.0.1
         with:
           db-server-name: localhost
           db-name: MyLocalDB
@@ -38,6 +38,7 @@ jobs:
           mock-db-object-nuget-feed-url: https://www.nuget.org/
           incremental: false
           run-tests: true
+          drop-db-after-build: false
 ```
 
 
