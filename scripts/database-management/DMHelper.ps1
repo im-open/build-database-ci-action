@@ -87,8 +87,8 @@ function Invoke-Git {
         [switch]$showOutput
     )            
     $gitPath = & "C:\Windows\System32\where.exe" git
-    $gitErrorPath = Join-Path $env:TEMP "stderr.txt"
-    $gitOutputPath = Join-Path $env:TEMP "stdout.txt"
+    $gitErrorPath = Join-Path $PSScriptRoot "stderr.txt"
+    $gitOutputPath = Join-Path $PSScriptRoot "stdout.txt"
 
     if ($gitPath.Count -gt 1) {
         $gitPath = $gitPath[0]

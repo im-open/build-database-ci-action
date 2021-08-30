@@ -37,6 +37,8 @@ function Install-DbObjectDependencies {
     param(
         [string]$projectRoot = (Get-ProjectRoot),
         [string]$nugetFeedUrl,
+        [string]$nugetUser,
+        [securestring]$nugetPassword,
         [string]$dependenciesFile,
         [char]$delimiter = ':',
         [string]$outputFolder
@@ -58,8 +60,7 @@ function Install-DbObjectDependencies {
         Remove-Item $nugetOutput -Force -Recurse -ErrorAction Ignore
         
         try {
-            $SecurePassword = ConvertTo-SecureString $env:NUGET_PASSWORD -AsPlainText -Force;
-            $nugetCredential = New-CredentialObject -username $env:NUGET_USER -password $SecurePassword
+            $nugetCredential = New-CredentialObject -username $nugetUser -password $nugetPassword
             [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
             Invoke-WebRequest $url -OutFile $nugetOutput -Credential $nugetCredential
         }
