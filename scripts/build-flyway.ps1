@@ -5,6 +5,8 @@ param(
     [switch]$installMockDbObjects,
     [switch]$dropDbAfterBuild,
     [string]$mockDbObjectNugetFeedUrl,
+    [string]$nugetUser,
+    [securestring]$nugetPassword,
     [string]$dbServerName = "localhost"
 )
 
