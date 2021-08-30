@@ -5,17 +5,17 @@ _This action only works on Windows Action Runners at the moment. There are plans
 This action uses [Flyway](https://flywaydb.org/) to spin up the specified database, run your migration scripts against it, and run your [tSQLt](https://tsqlt.org/) tests.
 
 ## Inputs
-| Parameter                       | Is Required  | Default | Description  |
-| --------------------------------|--------------|---------|--------------|
-| `db-server-name`                | true         | N/A     | The name of the database server to build the database on. |
-| `db-name`                       | true         | N/A     | The name of the database to build. |
-| `install-mock-db-objects`       | false        | false   | Specifies whether mock db objects should be used to fill out dependencies. If set to true mock-db-object-nuget-feed-url must also be set, otherwise an error will occur. |
-| `mock-db-object-nuget-feed-url` | false        | N/A     | The url to the nuget feed containing the mock database objects. This needs to be set if the install-mock-db-objects flag is set to avoid errors. |
-| `nuget-username`                | false        | N/A     | The username for the user to authenticate with the nuget feed. This should be set if install-mock-db-objects is true. |
-| `nuget-password`                | false        | N/A     | The password for the user to authenticate with the nuget feed. This should be set if install-mock-db-objects is true.s |
-| `incremental`                   | false        | false   | Specifies whether to drop and recreate the database before building, or apply to the current database. |
-| `run-tests`                     | false        | false   | Specifies whether or not to run tSQLt tests. |
-| `drop-db-after-build`           | false        | true    | Specifies whether or not to drop the database after building. Set this to false if other steps in the job rely on the database existing. |
+| Parameter                       | Is Required | Default | Description                                                                                                                                                              |
+| ------------------------------- | ----------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `db-server-name`                | true        | N/A     | The name of the database server to build the database on.                                                                                                                |
+| `db-name`                       | true        | N/A     | The name of the database to build.                                                                                                                                       |
+| `install-mock-db-objects`       | false       | false   | Specifies whether mock db objects should be used to fill out dependencies. If set to true mock-db-object-nuget-feed-url must also be set, otherwise an error will occur. |
+| `mock-db-object-nuget-feed-url` | false       | N/A     | The url to the nuget feed containing the mock database objects. This needs to be set if the install-mock-db-objects flag is set to avoid errors.                         |
+| `nuget-username`                | false       | N/A     | The username for the user to authenticate with the nuget feed. This should be set if install-mock-db-objects is true.                                                    |
+| `nuget-password`                | false       | N/A     | The password for the user to authenticate with the nuget feed. This should be set if install-mock-db-objects is true.s                                                   |
+| `incremental`                   | false       | false   | Specifies whether to drop and recreate the database before building, or apply to the current database.                                                                   |
+| `run-tests`                     | false       | false   | Specifies whether or not to run tSQLt tests.                                                                                                                             |
+| `drop-db-after-build`           | false       | true    | Specifies whether or not to drop the database after building. Set this to false if other steps in the job rely on the database existing.                                 |
 
 ## Example
 
