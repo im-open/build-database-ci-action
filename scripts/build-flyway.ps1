@@ -7,7 +7,8 @@ param(
     [string]$mockDbObjectNugetFeedUrl,
     [string]$nugetUser,
     [securestring]$nugetPassword,
-    [string]$dbServerName = "localhost"
+    [string]$dbServerName = "localhost",
+    [string]$dbServerPort = "1433"
 )
 
 # $oldverbose = $VerbosePreference
@@ -57,6 +58,17 @@ Write-Host "Building database..."
 
 # Dot source the DMFlyway file so its functions can be used
 . $PSScriptRoot\database-management\DMFlyway.ps1
-Invoke-DatabaseBuild -incremental:$incremental -runTests:$runTests -runAllMigrations -hostName $dbServerName -installMockDbObjects:$installMockDbObjects -mockDbObjectNugetFeedUrl $mockDbObjectNugetFeedUrl -seedData -dropDbAfterBuild:$dropDbAfterBuild
+
+Invoke-DatabaseBuild -incremental:$incremental `
+-runTests:$runTests `
+-runAllMigrations `
+-hostName $dbServerName `
+-port $dbServerPort `
+-installMockDbObjects:$installMockDbObjects `
+-mockDbObjectNugetFeedUrl $mockDbObjectNugetFeedUrl `
+-seedData `
+-dropDbAfterBuild:$dropDbAfterBuild `
+-nugetUser $nugetUser `
+-nugetPassword $nugetPassword
 
 # $VerbosePreference = $oldverbose

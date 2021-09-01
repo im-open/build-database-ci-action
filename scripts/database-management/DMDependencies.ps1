@@ -60,7 +60,7 @@ function Install-DbObjectDependencies {
         Remove-Item $nugetOutput -Force -Recurse -ErrorAction Ignore
         
         try {
-            $nugetCredential = New-CredentialObject -username $nugetUser -password $nugetPassword
+            $nugetCredential = New-Object System.Management.Automation.PSCredential($nugetUser, $nugetPassword)
             [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
             Invoke-WebRequest $url -OutFile $nugetOutput -Credential $nugetCredential
         }
