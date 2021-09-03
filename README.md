@@ -16,6 +16,7 @@ This action uses [Flyway](https://flywaydb.org/) to spin up the specified databa
 | `incremental`                   | false       | false   | Specifies whether to drop and recreate the database before building, or apply to the current database. The expected value is true or false.                                                                   |
 | `run-tests`                     | false       | false   | Specifies whether or not to run tSQLt tests.                                                                                                                                                                  |
 | `drop-db-after-build`           | false       | true    | Specifies whether or not to drop the database after building. Set this to false if other steps in the job rely on the database existing.                                                                      |
+| `should-validate-migrations`    | true        | false   | Determines whether flyway will validate the migration scripts before running them.                                                                                                                            |
 
 ## Example
 
@@ -32,7 +33,7 @@ jobs:
           version: 7.2.0
 
       - name: Build Database
-        uses: im-open/build-database-ci-action@v1.0.2
+        uses: im-open/build-database-ci-action@v1.0.3
         with:
           db-server-name: localhost
           db-name: MyLocalDB
@@ -43,6 +44,7 @@ jobs:
           incremental: false
           run-tests: true
           drop-db-after-build: false
+          should-validate-migrations: false
 ```
 
 
