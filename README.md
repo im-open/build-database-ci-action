@@ -34,7 +34,7 @@ jobs:
           version: 7.2.0
 
       - name: Build Database
-        uses: im-open/build-database-ci-action@v1.0.3
+        uses: im-open/build-database-ci-action@v1.0.4
         with:
           db-server-name: localhost
           db-name: MyLocalDB

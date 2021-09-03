@@ -57,7 +57,7 @@ runs:
 
         ${{ github.action_path }}/scripts/build-flyway.ps1 `
         -dbServerName "${{ inputs.db-server-name }}" `
-        -dbServerPort "${{ inputs.db-server-port }}"
+        -dbServerPort "${{ inputs.db-server-port }}" `
         -dbName "${{ inputs.db-name }}" `
         -installMockDbObjects:$${{ inputs.install-mock-db-objects }} `
         -mockDbObjectNugetFeedUrl "${{ inputs.mock-db-object-nuget-feed-url }}" `
