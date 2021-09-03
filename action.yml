@@ -6,6 +6,10 @@ inputs:
   db-server-name:
     description: The name of the database server to build the database on.
     required: true
+  db-server-port:
+    description: The port that the database server listens on.
+    required: false
+    default: '1433'
   db-name:
     description: The name of the database to bubild.
     required: true
@@ -51,7 +55,9 @@ runs:
       run: |
         $securePassword = ConvertTo-SecureString "${{ inputs.nuget-password }}" -AsPlainText -Force
 
-        ${{ github.action_path }}/scripts/build-flyway.ps1 -dbServerName "${{ inputs.db-server-name }}" `
+        ${{ github.action_path }}/scripts/build-flyway.ps1 `
+        -dbServerName "${{ inputs.db-server-name }}" `
+        -dbServerPort "${{ inputs.db-server-port }}"
         -dbName "${{ inputs.db-name }}" `
         -installMockDbObjects:$${{ inputs.install-mock-db-objects }} `
         -mockDbObjectNugetFeedUrl "${{ inputs.mock-db-object-nuget-feed-url }}" `
