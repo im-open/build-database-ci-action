@@ -69,6 +69,7 @@ function Invoke-DatabaseBuild {
         [switch]$seedData = $false,
         [switch]$runAllMigrations,
         [switch]$installMockDbObjects,
+		[switch]$validateMigrations = $false,
         [string]$mockDbObjectNugetFeedUrl,
         [string]$nugetUser,
         [securestring]$nugetPassword,
@@ -129,11 +130,11 @@ function Invoke-DatabaseBuild {
             $versions = Get-Version -sqlFolder $baselineSnapshotFolder
             $baselineVersion = ($versions | Measure-Object -Maximum).Maximum
             Invoke-FlywayBaseline -hostName $hostName -port $port -dbName $dbName -MigrationHistoryTable "MigrationHistory" -projectRoot $projectRoot -baselineVersion $baselineVersion
-            Invoke-Flyway -hostName $hostName -port $port -dbName $dbName -scriptFolder $baselineSnapshotFolder -MigrationHistoryTable "MigrationHistory" -projectRoot $projectRoot -baselineVersion $baselineVersion
+            Invoke-Flyway -hostName $hostName -port $port -dbName $dbName -scriptFolder $baselineSnapshotFolder -MigrationHistoryTable "MigrationHistory" -projectRoot $projectRoot -baselineVersion $baselineVersion -validateMigrations:$validateMigrations
         }
         Write-Status "Executing Flyway build and migrations";
         Write-Verbose "The command is: [Invoke-Flyway -hostName $hostName -port $port -dbName $dbName -scriptFolder $sqlFolder -MigrationHistoryTable ""MigrationHistory""]"
-        Invoke-Flyway -hostName $hostName -port $port -dbName $dbName -scriptFolder $sqlFolder -MigrationHistoryTable "MigrationHistory" -projectRoot $projectRoot -baselineVersion $baselineVersion
+        Invoke-Flyway -hostName $hostName -port $port -dbName $dbName -scriptFolder $sqlFolder -MigrationHistoryTable "MigrationHistory" -projectRoot $projectRoot -baselineVersion $baselineVersion -validateMigrations:$validateMigrations
         Show-ExternalError
         if ($runTests) {
             [int]$errorCount = 0
@@ -423,7 +424,8 @@ function Invoke-Flyway {
         [string]$MigrationHistoryTable, #= "TestingHistory" #"Flyway.Testing"
         [string]$baselineVersion = 0, # Starting Version Number for Migration
         [string]$projectRoot,
-        [switch]$enableOutOfOrder = $false
+        [switch]$enableOutOfOrder = $false,
+		[switch]$validateMigrations = $false
     )
     $ErrorActionPreference = "Stop";
 
@@ -433,6 +435,7 @@ function Invoke-Flyway {
     try
     {
         $outOfOrderValue = $enableOutOfOrder.ToString().ToLower()
+		$validateOnMigrateValue = $validateMigrations.ToString().ToLower()
         $managedSchemas = (Get-DMConfig -projectRoot $projectRoot).Flyway.managedSchema
         $jdbcUrl = Get-DbConnectionUrl -hostName $hostName -port $port -database $dbName
         $flywayParamArray = @(
@@ -446,6 +449,7 @@ function Invoke-Flyway {
             "-baselineVersion=$baselineVersion"
             "-schemas=`"$managedSchemas`""
             "-outOfOrder=$outOfOrderValue"
+			"-validateOnMigrate=$validateOnMigrateValue"
         )
         $flywayParams = [string]::Join(" ", $flywayParamArray)
         if ($baselineVersion -gt 0) {

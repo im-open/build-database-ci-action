@@ -8,7 +8,8 @@ param(
     [string]$nugetUser,
     [securestring]$nugetPassword,
     [string]$dbServerName = "localhost",
-    [string]$dbServerPort = "1433"
+    [string]$dbServerPort = "1433",
+	[switch]$validateMigrations = $false
 )
 
 # $oldverbose = $VerbosePreference
@@ -69,6 +70,7 @@ Invoke-DatabaseBuild -incremental:$incremental `
 -seedData `
 -dropDbAfterBuild:$dropDbAfterBuild `
 -nugetUser $nugetUser `
--nugetPassword $nugetPassword
+-nugetPassword $nugetPassword `
+-validateMigrations:$validateMigrations
 
 # $VerbosePreference = $oldverbose

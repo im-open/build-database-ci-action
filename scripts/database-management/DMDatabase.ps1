@@ -11,7 +11,7 @@ function Invoke-SqlByFileName {
     
     $parameters = @(
         "-InputFile `"$scriptPath`""
-        "-ServerInstance `"$hostName,$port`""
+        "-ServerInstance `"$hostName`""
         "-Database `"$connectionDatabase`""
         "-AbortOnError"
         "-SeverityLevel 0"
