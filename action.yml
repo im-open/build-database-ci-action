@@ -6,6 +6,10 @@ inputs:
   db-server-name:
     description: The name of the database server to build the database on.
     required: true
+  db-server-port:
+    description: The port that the database server listens on.
+    required: false
+    default: '1433'
   db-name:
     description: The name of the database to bubild.
     required: true
@@ -34,6 +38,10 @@ inputs:
     description: Specifies whether or not to drop the database after building. Set this to false if other steps in the job rely on the database existing.
     required: false
     default: 'true'
+  should-validate-migrations:
+    description: Determines whether flyway will validate the migration scripts before running them.
+    required: true
+    default: 'false'
 
 runs:
   using: "composite"
@@ -47,7 +55,9 @@ runs:
       run: |
         $securePassword = ConvertTo-SecureString "${{ inputs.nuget-password }}" -AsPlainText -Force
 
-        ${{ github.action_path }}/scripts/build-flyway.ps1 -dbServerName "${{ inputs.db-server-name }}" `
+        ${{ github.action_path }}/scripts/build-flyway.ps1 `
+        -dbServerName "${{ inputs.db-server-name }}" `
+        -dbServerPort "${{ inputs.db-server-port }}"
         -dbName "${{ inputs.db-name }}" `
         -installMockDbObjects:$${{ inputs.install-mock-db-objects }} `
         -mockDbObjectNugetFeedUrl "${{ inputs.mock-db-object-nuget-feed-url }}" `
@@ -55,4 +65,5 @@ runs:
         -nugetPassword $securePassword `
         -incremental:$${{ inputs.incremental }} `
         -runTests:$${{ inputs.run-tests }} `
-        -dropDbAfterBuild:$${{ inputs.drop-db-after-build }}
+        -dropDbAfterBuild:$${{ inputs.drop-db-after-build }} `
+        -validateMigrations:$${{ inputs.should-validate-migrations }}

@@ -8,6 +8,7 @@ This action uses [Flyway](https://flywaydb.org/) to spin up the specified databa
 | Parameter                       | Is Required | Default | Description                                                                                                                                                                                                   |
 | ------------------------------- | ----------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `db-server-name`                | true        | N/A     | The name of the database server to build the database on.                                                                                                                                                     |
+| `db-server-port`                | false       | 1433    | The port that the database server listens on.                                                                                                                                                                 |
 | `db-name`                       | true        | N/A     | The name of the database to build.                                                                                                                                                                            |
 | `install-mock-db-objects`       | false       | false   | Specifies whether mock db objects should be used to fill out dependencies. If set to true mock-db-object-nuget-feed-url must also be set, otherwise an error will occur. The expected value is true or false. |
 | `mock-db-object-nuget-feed-url` | false       | N/A     | The url to the nuget feed containing the mock database objects. This needs to be set if the install-mock-db-objects flag is set to avoid errors.                                                              |
@@ -16,6 +17,7 @@ This action uses [Flyway](https://flywaydb.org/) to spin up the specified databa
 | `incremental`                   | false       | false   | Specifies whether to drop and recreate the database before building, or apply to the current database. The expected value is true or false.                                                                   |
 | `run-tests`                     | false       | false   | Specifies whether or not to run tSQLt tests.                                                                                                                                                                  |
 | `drop-db-after-build`           | false       | true    | Specifies whether or not to drop the database after building. Set this to false if other steps in the job rely on the database existing.                                                                      |
+| `should-validate-migrations`    | true        | false   | Determines whether flyway will validate the migration scripts before running them.                                                                                                                            |
 
 ## Example
 
@@ -32,7 +34,7 @@ jobs:
           version: 7.2.0
 
       - name: Build Database
-        uses: im-open/build-database-ci-action@v1.0.2
+        uses: im-open/build-database-ci-action@v1.0.3
         with:
           db-server-name: localhost
           db-name: MyLocalDB
@@ -43,6 +45,7 @@ jobs:
           incremental: false
           run-tests: true
           drop-db-after-build: false
+          should-validate-migrations: false
 ```
 
 
