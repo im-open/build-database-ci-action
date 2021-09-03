@@ -130,11 +130,28 @@ function Invoke-DatabaseBuild {
             $versions = Get-Version -sqlFolder $baselineSnapshotFolder
             $baselineVersion = ($versions | Measure-Object -Maximum).Maximum
             Invoke-FlywayBaseline -hostName $hostName -port $port -dbName $dbName -MigrationHistoryTable "MigrationHistory" -projectRoot $projectRoot -baselineVersion $baselineVersion
-            Invoke-Flyway -hostName $hostName -port $port -dbName $dbName -scriptFolder $baselineSnapshotFolder -MigrationHistoryTable "MigrationHistory" -projectRoot $projectRoot -baselineVersion $baselineVersion -validateMigrations:$validateMigrations
+            Invoke-Flyway `
+            -hostName $hostName `
+            -port $port `
+            -dbName $dbName `
+            -scriptFolder $baselineSnapshotFolder `
+            -MigrationHistoryTable "MigrationHistory" `
+            -projectRoot $projectRoot `
+            -baselineVersion $baselineVersion `
+            -validateMigrations:$validateMigrations
         }
         Write-Status "Executing Flyway build and migrations";
         Write-Verbose "The command is: [Invoke-Flyway -hostName $hostName -port $port -dbName $dbName -scriptFolder $sqlFolder -MigrationHistoryTable ""MigrationHistory""]"
-        Invoke-Flyway -hostName $hostName -port $port -dbName $dbName -scriptFolder $sqlFolder -MigrationHistoryTable "MigrationHistory" -projectRoot $projectRoot -baselineVersion $baselineVersion -validateMigrations:$validateMigrations
+        Invoke-Flyway `
+        -hostName $hostName `
+        -port $port `
+        -dbName $dbName `
+        -scriptFolder $sqlFolder `
+        -MigrationHistoryTable "MigrationHistory" `
+        -projectRoot $projectRoot `
+        -baselineVersion $baselineVersion `
+        -validateMigrations:$validateMigrations
+        
         Show-ExternalError
         if ($runTests) {
             [int]$errorCount = 0
