@@ -53,7 +53,7 @@ runs:
     - name: Build Database
       shell: pwsh
       run: |
-        $securePassword = ConvertTo-SecureString "${{ inputs.nuget-password }}" -AsPlainText -Force
+        $securePassword = if(!!"${{ inputs.nuget-password }}") { ConvertTo-SecureString "${{ inputs.nuget-password }}" -AsPlainText -Force } else { $null }
 
         ${{ github.action_path }}/scripts/build-flyway.ps1 `
         -dbServerName "${{ inputs.db-server-name }}" `
