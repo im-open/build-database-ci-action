@@ -63,6 +63,7 @@ Write-Host "Building database..."
 Invoke-DatabaseBuild -incremental:$incremental `
 -runTests:$runTests `
 -runAllMigrations `
+-dbName $dbName `
 -hostName $dbServerName `
 -port $dbServerPort `
 -installMockDbObjects:$installMockDbObjects `
