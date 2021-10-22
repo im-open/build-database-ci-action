@@ -9,7 +9,8 @@ param(
     [securestring]$nugetPassword,
     [string]$dbServerName = "localhost",
     [string]$dbServerPort = "1433",
-	[switch]$validateMigrations = $false
+    [switch]$validateMigrations = $false,
+    [switch]$seedData = $false
 )
 
 # $oldverbose = $VerbosePreference
@@ -68,7 +69,7 @@ Invoke-DatabaseBuild -incremental:$incremental `
 -port $dbServerPort `
 -installMockDbObjects:$installMockDbObjects `
 -mockDbObjectNugetFeedUrl $mockDbObjectNugetFeedUrl `
--seedData `
+-seedData:$seedData `
 -dropDbAfterBuild:$dropDbAfterBuild `
 -nugetUser $nugetUser `
 -nugetPassword $nugetPassword `

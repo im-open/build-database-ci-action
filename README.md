@@ -18,6 +18,7 @@ This action uses [Flyway](https://flywaydb.org/) to spin up the specified databa
 | `run-tests`                     | false       | false   | Specifies whether or not to run tSQLt tests.                                                                                                                                                                  |
 | `drop-db-after-build`           | false       | true    | Specifies whether or not to drop the database after building. Set this to false if other steps in the job rely on the database existing.                                                                      |
 | `should-validate-migrations`    | true        | false   | Determines whether flyway will validate the migration scripts before running them.                                                                                                                            |
+| `seed-data`                     | false       | false   | A switch specifying whether or not to seed data into the database.                                                                                                                                            |
 
 ## Example
 
@@ -34,7 +35,7 @@ jobs:
           version: 7.2.0
 
       - name: Build Database
-        uses: im-open/build-database-ci-action@v1.0.6
+        uses: im-open/build-database-ci-action@v1.0.7
         with:
           db-server-name: localhost
           db-name: MyLocalDB
