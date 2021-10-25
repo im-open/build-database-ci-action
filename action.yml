@@ -42,6 +42,10 @@ inputs:
     description: Determines whether flyway will validate the migration scripts before running them.
     required: true
     default: 'false'
+  seed-data:
+    description: A switch specifying whether or not to seed data into the database.
+    required: false
+    default: 'false'
 
 runs:
   using: "composite"
@@ -66,4 +70,5 @@ runs:
         -incremental:$${{ inputs.incremental }} `
         -runTests:$${{ inputs.run-tests }} `
         -dropDbAfterBuild:$${{ inputs.drop-db-after-build }} `
-        -validateMigrations:$${{ inputs.should-validate-migrations }}
+        -validateMigrations:$${{ inputs.should-validate-migrations }} `
+        -seedData:$${{ inputs.seed-data }}
