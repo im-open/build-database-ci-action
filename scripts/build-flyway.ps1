@@ -10,7 +10,9 @@ param(
     [string]$dbServerName = "localhost",
     [string]$dbServerPort = "1433",
     [switch]$validateMigrations = $false,
-    [switch]$seedData = $false
+    [switch]$seedData = $false,
+    [string]$dbUsername,
+    [string]$dbPassword
 )
 
 # $oldverbose = $VerbosePreference
@@ -21,7 +23,7 @@ flyway -v
 $PSModuleAutoLoadingPreference = 'None'
 $ErrorActionPreference = 'Stop'
 
-if( $PSVersionTable.PSVersion -lt "5.0" ) {
+if ( $PSVersionTable.PSVersion -lt "5.0" ) {
     Write-Error "Requires PowerShell 5.0 or greater"
     exit 1
 }
@@ -39,13 +41,14 @@ Write-Verbose "Setting TLS version to 1.2"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 # If a minimum version of the SQL Server Powershell module is installed, import it. If not, install it from the PowerShell gallery ( https://www.powershellgallery.com/api/v2/).
-if(get-module SqlServer -ListAvailable | Where-Object {$_.Version -ge [Version]"21.0" }) {
+if (get-module SqlServer -ListAvailable | Where-Object { $_.Version -ge [Version]"21.0" }) {
     Write-Verbose "Importing SqlServer module"
     Import-Module SqlServer -MinimumVersion 21.0
-} else {
+}
+else {
     # install the SqlServer module
     $repo = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
-    if (!$repo){
+    if (!$repo) {
         Write-Verbose "Registering PSGallery as as PSRepository"
         Register-PSRepository -Name "PSGallery" -SourceLocation "https://www.powershellgallery.com/api/v2/" -InstallationPolicy Trusted
     }
@@ -62,17 +65,18 @@ Write-Host "Building database..."
 . $PSScriptRoot\database-management\DMFlyway.ps1
 
 Invoke-DatabaseBuild -incremental:$incremental `
--runTests:$runTests `
--runAllMigrations `
--dbName $dbName `
--hostName $dbServerName `
--port $dbServerPort `
--installMockDbObjects:$installMockDbObjects `
--mockDbObjectNugetFeedUrl $mockDbObjectNugetFeedUrl `
--seedData:$seedData `
--dropDbAfterBuild:$dropDbAfterBuild `
--nugetUser $nugetUser `
--nugetPassword $nugetPassword `
--validateMigrations:$validateMigrations
+    -runTests:$runTests `
+    -runAllMigrations `
+    -hostName $dbServerName `
+    -port $dbServerPort `
+    -installMockDbObjects:$installMockDbObjects `
+    -mockDbObjectNugetFeedUrl $mockDbObjectNugetFeedUrl `
+    -seedData:$seedData `
+    -dropDbAfterBuild:$dropDbAfterBuild `
+    -nugetUser $nugetUser `
+    -nugetPassword $nugetPassword `
+    -validateMigrations:$validateMigrations `
+    -dbUsername $dbUsername `
+    -dbPassword $dbPassword
 
 # $VerbosePreference = $oldverbose
