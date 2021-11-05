@@ -137,7 +137,7 @@ function Invoke-DatabaseBuild {
                 -scriptFolder $baselineSnapshotFolder `
                 -MigrationHistoryTable "MigrationHistory" `
                 -projectRoot $projectRoot `
-                -baselineVersion $baselineVersion `
+                -baselineVersion "$baselineVersion" `
                 -validateMigrations:$validateMigrations `
                 -username $dbUsername `
                 -password $dbPassword
@@ -471,7 +471,7 @@ function Invoke-Flyway {
             "-installedBy=$currentUserName"
             "-table=$MigrationHistoryTable"
             "-baselineOnMigrate=true"
-            "-baselineVersion=$baselineVersion"
+            "-baselineVersion=`"$baselineVersion`""
             "-schemas=`"$managedSchemas`""
             "-outOfOrder=$outOfOrderValue"
             "-validateOnMigrate=$validateOnMigrateValue"
