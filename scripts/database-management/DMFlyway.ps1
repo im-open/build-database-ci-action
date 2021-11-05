@@ -221,7 +221,7 @@ function Test-Migration {
     )
 
     $unitTestingFolder = Join-Path $projectRoot (Get-DMConfig -projectRoot $projectRoot).paths.unitTests -Resolve
-    $resultXmlPath = Join-Path $projectRoot "bin\test-results.xml"
+    $resultXmlPath = Join-Path $projectRoot "bin/test-results.xml"
     $numErrored = 0
     $numFailed = 0
 
