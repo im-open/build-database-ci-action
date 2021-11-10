@@ -6,13 +6,13 @@ param(
     [switch]$dropDbAfterBuild,
     [string]$mockDbObjectNugetFeedUrl,
     [string]$nugetUser,
-    [securestring]$nugetPassword,
+    [SecureString]$nugetPassword,
     [string]$dbServerName = "localhost",
     [string]$dbServerPort = "1433",
     [switch]$validateMigrations = $false,
     [switch]$seedData = $false,
     [string]$dbUsername,
-    [string]$dbPassword
+    [SecureString]$dbPassword
 )
 
 # $oldverbose = $VerbosePreference

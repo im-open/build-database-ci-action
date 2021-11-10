@@ -8,7 +8,7 @@ function Invoke-SqlByFileName {
         [string]$targetDatabase,
         [string]$connectionDatabase,
         [string]$username,
-        [string]$password
+        [SecureString]$password
     )
     
     $parameters = @(
@@ -23,8 +23,10 @@ function Invoke-SqlByFileName {
     )
 
     if ($username) {
+        $plainPassword = Get-PlainTextPassword $password
+
         $parameters += "-Username $username"
-        $parameters += "-Password '$password'"
+        $parameters += "-Password '$plainPassword'"
     }
 
     $parametersString = [string]::Join(" ", $parameters)

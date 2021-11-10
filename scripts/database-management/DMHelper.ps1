@@ -192,3 +192,13 @@ function Get-ExceptionDetails {
 
     return $details
 }
+
+function Get-PlainTextPassword {
+    [CmdletBinding()]
+    param (
+        [SecureString]$password
+    )
+
+    $cred = New-Object System.Management.Automation.PSCredential -ArgumentList $username, $password
+    return $cred.GetNetworkCredential().Password
+}

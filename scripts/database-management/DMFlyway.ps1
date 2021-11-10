@@ -75,7 +75,7 @@ function Invoke-DatabaseBuild {
         [securestring]$nugetPassword,
         [string]$queryTimeout,
         [string]$dbUsername,
-        [string]$dbPassword
+        [SecureString]$dbPassword
     )
     Clear-DmConfigCache
     if (!$dbName) {
@@ -217,7 +217,7 @@ function Test-Migration {
         [string]$projectRoot = (Get-ProjectRoot),
         [string]$queryTimeout,
         [string]$dbUsername,
-        [string]$dbPassword,
+        [SecureString]$dbPassword,
         [ref][int]$numTestsErrored,
         [ref][int]$numTestsFailed
     )
@@ -274,7 +274,7 @@ function Invoke-LoadSeedData {
         [string]$port,
         [string]$projectRoot = (Get-ProjectRoot),
         [string]$username,
-        [string]$password
+        [SecureString]$password
     )
 
     $seedDataFolder = Join-Path $projectRoot (Get-DMConfig -projectRoot $projectRoot).paths.databaseSeedData -Resolve
@@ -462,7 +462,7 @@ function Invoke-Flyway {
         [switch]$enableOutOfOrder = $false,
         [switch]$validateMigrations = $false,
         [string]$username,
-        [string]$password
+        [SecureString]$password
     )
     $ErrorActionPreference = "Stop";
 
@@ -486,22 +486,20 @@ function Invoke-Flyway {
             "-outOfOrder=$outOfOrderValue"
             "-validateOnMigrate=$validateOnMigrateValue"
         )
+        
+        Write-Host "Running migrations: [flyway $flywayParams migrate]"
 
         if ($username) {
-            # $cred = New-Object System.Management.Automation.PSCredential -ArgumentList $username, $password
-            # $plainPassword = $cred.GetNetworkCredential().Password
+            $plainPassword = Get-PlainTextPassword $password
 
             $flywayParamArray += "-user=`"$username`""
-            $flywayParamArray += "-password=`"$password`""
-            # $printableFlywayParamArray += "-user=`"$userName`""
-            # $printableFlywayParamArray += "-password=`"$password`""
+            $flywayParamArray += "-password=`"$plainPassword`""
         }
 
         $flywayParams = [string]::Join(" ", $flywayParamArray)
         if ($baselineVersion -gt 0) {
             $flywayParams = $flywayParams + " -ignoreMissingMigrations=true"
         }
-        Write-Host "Running migrations: [flyway $flywayParams migrate]"
         Invoke-Expression -Command "& flyway $flywayParams migrate" -ErrorAction Stop
         Show-ExternalError
     }
@@ -523,7 +521,7 @@ function Invoke-FlywayBaseline {
         [string]$baselineVersion = 0, # Starting Version Number for Migration
         [string]$projectRoot,
         [string]$username,
-        [string]$password
+        [SecureString]$password
     )
     $ErrorActionPreference = "Stop";
 
@@ -539,19 +537,17 @@ function Invoke-FlywayBaseline {
             "-schemas=`"$managedSchemas`""
         )
 
+        Write-Verbose "Running migrations: [flyway $flywayParams baseline]"
+
         if ($username) {
-            # $cred = New-Object System.Management.Automation.PSCredential -ArgumentList $username, $password
-            # $plainPassword = $cred.GetNetworkCredential().Password
+            $plainPassword = Get-PlainTextPassword $password
 
             $flywayParamArray += "-user=`"$username`""
-            $flywayParamArray += "-password=`"$password`""
-            # $printableFlywayParamArray += "-user=`"$userName`""
-            # $printableFlywayParamArray += "-password=`"$password`""
+            $flywayParamArray += "-password=`"$plainPassword`""
         }
 
         $flywayParams = [string]::Join(" ", $flywayParamArray)
 
-        Write-Verbose "Running migrations: [flyway $flywayParams baseline]"
         Invoke-Expression -Command "& flyway $flywayParams baseline" -ErrorAction Stop
         Show-ExternalError
     }
