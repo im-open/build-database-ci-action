@@ -161,7 +161,7 @@ function Invoke-DatabaseBuild {
             [int]$errorCount = 0
             [int]$failCount = 0
             [string]$testErrorMessage = ""
-            Test-Migration -hostName $hostName -port $port -database $dbName -projectRoot $projectRoot -queryTimeout $queryTimeout ([ref]$errorCount) ([ref]$failCount)
+            Test-Migration -hostName $hostName -port $port -database $dbName -projectRoot $projectRoot -queryTimeout $queryTimeout -dbUsername $dbUsername -dbPassword $dbPassword ([ref]$errorCount) ([ref]$failCount)
             Write-Verbose "Tests Errored = $errorCount"
             Write-Verbose "Tests Failed = $failCount"
             if ($errorCount -gt 0) {
@@ -216,6 +216,8 @@ function Test-Migration {
         [string]$port,
         [string]$projectRoot = (Get-ProjectRoot),
         [string]$queryTimeout,
+        [string]$dbUsername,
+        [string]$dbPassword,
         [ref][int]$numTestsErrored,
         [ref][int]$numTestsFailed
     )
@@ -225,7 +227,15 @@ function Test-Migration {
     $numErrored = 0
     $numFailed = 0
 
-    Invoke-Flyway -dbName "$database" -HostName "$hostName" -port $port -scriptFolder $unitTestingFolder -MigrationHistoryTable "TestingHistory" -projectRoot $projectRoot
+    Invoke-Flyway -dbName "$database" `
+        -HostName "$hostName" `
+        -port $port `
+        -scriptFolder $unitTestingFolder `
+        -MigrationHistoryTable "TestingHistory" `
+        -projectRoot $projectRoot `
+        -username $dbUsername `
+        -password $dbPassword
+
     Show-ExternalError
     $testStart = [DateTime]::Now
     Write-Status "Running Unit Tests"
