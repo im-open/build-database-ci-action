@@ -69,11 +69,13 @@ function Invoke-DatabaseBuild {
         [switch]$seedData = $false,
         [switch]$runAllMigrations,
         [switch]$installMockDbObjects,
-		[switch]$validateMigrations = $false,
+        [switch]$validateMigrations = $false,
         [string]$mockDbObjectNugetFeedUrl,
         [string]$nugetUser,
         [securestring]$nugetPassword,
-        [string]$queryTimeout
+        [string]$queryTimeout,
+        [string]$dbUsername,
+        [SecureString]$dbPassword
     )
     Clear-DmConfigCache
     if (!$dbName) {
@@ -85,7 +87,7 @@ function Invoke-DatabaseBuild {
     if (!$port) {
         $port = (Get-DMConfig -projectRoot $projectRoot).db.port
     }
-    if (!$queryTimeout){
+    if (!$queryTimeout) {
         $queryTimeout = (Get-DMConfig -projectRoot $projectRoot).db.queryTimeout
     }
 
@@ -98,12 +100,11 @@ function Invoke-DatabaseBuild {
 
     Assert-DbNameValid $dbName (Get-DMConfig -projectRoot $projectRoot).db.forbiddenDbNames
 
-    if ($incremental -eq $false)
-    {
+    if ($incremental -eq $false) {
         Remove-Db "$hostName,$port" $dbName
         Write-Verbose "Executing Create Database Expression:"
         Write-Verbose "The command is [Invoke-SqlByFileName -scriptPath $baselineScriptName -hostName $hostName -port $port -targetDatabase $dbName -connectionDatabase master]"
-        Invoke-SqlByFileName -scriptPath $baselineScriptName -hostName $hostName -port $port -targetDatabase $dbName -connectionDatabase "master"
+        Invoke-SqlByFileName -scriptPath $baselineScriptName -hostName $hostName -port $port -targetDatabase $dbName -connectionDatabase "master" -username $dbUsername -password $dbPassword
         Show-Error
         Write-Status "Database $dbName created successfully"
     }
@@ -113,15 +114,14 @@ function Invoke-DatabaseBuild {
         $dependenciesFile = Join-Path $projectRoot (Get-DMCOnfig -projectRoot $projectRoot).paths.dependencies -Resolve
         Install-DbObjectDependencies -nugetFeedUrl $mockDbObjectNugetFeedUrl -dependenciesFile $dependenciesFile -outputFolder $dependenciesOutputFolder -nugetUser $nugetUser -nugetPassword $nugetPassword
         Get-ChildItem -Path $dependenciesOutputFolder -Recurse -Depth 1 -Filter *.sql | ForEach-Object {
-            Invoke-SqlByFileName -scriptPath $_.FullName -hostName $hostName -port $port -targetDatabase $dbName -connectionDatabase $dbName
+            Invoke-SqlByFileName -scriptPath $_.FullName -hostName $hostName -port $port -targetDatabase $dbName -connectionDatabase $dbName  -username $dbUsername -password $dbPassword
         }
     }
 
-    try
-    {   
+    try {   
         $baselineVersion = 0
         
-        if($incremental -eq $true) {
+        if ($incremental -eq $true) {
             $baselineVersion = 0.1 # this will allow us to ignore missing migrations when running flyway
             $runAllMigrations = $true # if running incremental we do not want to run baseline snapshot as this could break a deployment. We never want to run baseline snapshot when deploying migrations
         }
@@ -129,35 +129,39 @@ function Invoke-DatabaseBuild {
         if ($runAllMigrations -eq $false -and $baselineSnapshotFolder) {
             $versions = Get-Version -sqlFolder $baselineSnapshotFolder
             $baselineVersion = ($versions | Measure-Object -Maximum).Maximum
-            Invoke-FlywayBaseline -hostName $hostName -port $port -dbName $dbName -MigrationHistoryTable "MigrationHistory" -projectRoot $projectRoot -baselineVersion $baselineVersion
+            Invoke-FlywayBaseline -hostName $hostName -port $port -dbName $dbName -MigrationHistoryTable "MigrationHistory" -projectRoot $projectRoot -baselineVersion $baselineVersion -username $username -password $password
             Invoke-Flyway `
-            -hostName $hostName `
-            -port $port `
-            -dbName $dbName `
-            -scriptFolder $baselineSnapshotFolder `
-            -MigrationHistoryTable "MigrationHistory" `
-            -projectRoot $projectRoot `
-            -baselineVersion $baselineVersion `
-            -validateMigrations:$validateMigrations
+                -hostName $hostName `
+                -port $port `
+                -dbName $dbName `
+                -scriptFolder $baselineSnapshotFolder `
+                -MigrationHistoryTable "MigrationHistory" `
+                -projectRoot $projectRoot `
+                -baselineVersion "$baselineVersion" `
+                -validateMigrations:$validateMigrations `
+                -username $dbUsername `
+                -password $dbPassword
         }
         Write-Status "Executing Flyway build and migrations";
         Write-Verbose "The command is: [Invoke-Flyway -hostName $hostName -port $port -dbName $dbName -scriptFolder $sqlFolder -MigrationHistoryTable ""MigrationHistory""]"
         Invoke-Flyway `
-        -hostName $hostName `
-        -port $port `
-        -dbName $dbName `
-        -scriptFolder $sqlFolder `
-        -MigrationHistoryTable "MigrationHistory" `
-        -projectRoot $projectRoot `
-        -baselineVersion $baselineVersion `
-        -validateMigrations:$validateMigrations
+            -hostName $hostName `
+            -port $port `
+            -dbName $dbName `
+            -scriptFolder $sqlFolder `
+            -MigrationHistoryTable "MigrationHistory" `
+            -projectRoot $projectRoot `
+            -baselineVersion $baselineVersion `
+            -validateMigrations:$validateMigrations `
+            -username $dbUsername `
+            -password $dbPassword
         
         Show-ExternalError
         if ($runTests) {
             [int]$errorCount = 0
             [int]$failCount = 0
             [string]$testErrorMessage = ""
-            Test-Migration -hostName $hostName -port $port -database $dbName -projectRoot $projectRoot -queryTimeout $queryTimeout ([ref]$errorCount) ([ref]$failCount)
+            Test-Migration -hostName $hostName -port $port -database $dbName -projectRoot $projectRoot -queryTimeout $queryTimeout -dbUsername $dbUsername -dbPassword $dbPassword ([ref]$errorCount) ([ref]$failCount)
             Write-Verbose "Tests Errored = $errorCount"
             Write-Verbose "Tests Failed = $failCount"
             if ($errorCount -gt 0) {
@@ -172,27 +176,22 @@ function Invoke-DatabaseBuild {
         }
 
         if ($seedData) {
-            Invoke-LoadSeedData -hostName $hostName -port $port -database $dbName -projectRoot $projectRoot
+            Invoke-LoadSeedData -hostName $hostName -port $port -database $dbName -projectRoot $projectRoot -username $dbUsername -password $dbPassword
         }
     }
-    catch
-    {
+    catch {
         $exitCode = 1
         $errorMessage = "DMFlyway.ps1 exception: `r`n $(Get-PSCallStack)"
         Write-Status "$errorMessage `r`n $(Get-ExceptionDetails $_.Exception)"
         throw $errorMessage
     }
-    finally
-    {
-        try
-        {
-            if ($dropDbAfterBuild)
-            {
+    finally {
+        try {
+            if ($dropDbAfterBuild) {
                 Remove-Db "$hostName,$port" $dbName
             }
         }
-        catch
-        {
+        catch {
             Write-Status "Unable to drop database `r`n $(Get-ExceptionDetails $_.Exception)"
             throw
         }
@@ -200,8 +199,7 @@ function Invoke-DatabaseBuild {
         $end = [DateTime]::Now
         $elapsed = Get-ElapsedTime $start $end
         $errorMessage = "successfully"
-        if ($exitCode -ne 0)
-        {
+        if ($exitCode -ne 0) {
             $errorMessage = "with errors"
         }
 
@@ -218,16 +216,26 @@ function Test-Migration {
         [string]$port,
         [string]$projectRoot = (Get-ProjectRoot),
         [string]$queryTimeout,
+        [string]$dbUsername,
+        [SecureString]$dbPassword,
         [ref][int]$numTestsErrored,
         [ref][int]$numTestsFailed
     )
 
     $unitTestingFolder = Join-Path $projectRoot (Get-DMConfig -projectRoot $projectRoot).paths.unitTests -Resolve
-    $resultXmlPath = Join-Path $projectRoot "bin\test-results.xml"
+    $resultXmlPath = Join-Path $projectRoot "bin/test-results.xml"
     $numErrored = 0
     $numFailed = 0
 
-    Invoke-Flyway -dbName "$database" -HostName "$hostName" -port $port -scriptFolder $unitTestingFolder -MigrationHistoryTable "TestingHistory" -projectRoot $projectRoot
+    Invoke-Flyway -dbName "$database" `
+        -HostName "$hostName" `
+        -port $port `
+        -scriptFolder $unitTestingFolder `
+        -MigrationHistoryTable "TestingHistory" `
+        -projectRoot $projectRoot `
+        -username $dbUsername `
+        -password $dbPassword
+
     Show-ExternalError
     $testStart = [DateTime]::Now
     Write-Status "Running Unit Tests"
@@ -235,16 +243,16 @@ function Test-Migration {
     # determine if any tests have failed
     [xml]$resultXml = Get-Content $resultXmlPath
     if ($null -ne $resultXml) {
-        foreach ($testsuite in $resultXml.testsuites.testsuite){
+        foreach ($testsuite in $resultXml.testsuites.testsuite) {
             $numErrored += $testsuite.errors
             $numFailed += $testsuite.failures 
         }
-        foreach ($testcase in $resultXml.testsuites.testsuite.testcase){
+        foreach ($testcase in $resultXml.testsuites.testsuite.testcase) {
             $testname = "[$($testcase.classname)].[$($testcase.name)]"
-            if ($null -ne $($testcase.error)){
+            if ($null -ne $($testcase.error)) {
                 Write-Status "$testname ERRORED!`nError Message: $($testcase.error.message)`n"
             } 
-            elseif ($null -ne $($testcase.failure)){
+            elseif ($null -ne $($testcase.failure)) {
                 Write-Status "$testname FAILED!`nFailure Message: $($testcase.failure.message)`n"
             }
         }
@@ -264,13 +272,23 @@ function Invoke-LoadSeedData {
         [string]$database,
         [string]$hostName,
         [string]$port,
-        [string]$projectRoot = (Get-ProjectRoot)
+        [string]$projectRoot = (Get-ProjectRoot),
+        [string]$username,
+        [SecureString]$password
     )
 
     $seedDataFolder = Join-Path $projectRoot (Get-DMConfig -projectRoot $projectRoot).paths.databaseSeedData -Resolve
     
     Write-Status "Executing Flyway for test data";
-    Invoke-Flyway -dbName "$database" -HostName "$hostName" -port $port -scriptFolder $seedDataFolder -MigrationHistoryTable "SeedDataHistory" -projectRoot $projectRoot
+    Invoke-Flyway -dbName "$database" `
+        -HostName "$hostName" `
+        -port $port `
+        -scriptFolder $seedDataFolder `
+        -MigrationHistoryTable "SeedDataHistory" `
+        -projectRoot $projectRoot `
+        -username $username `
+        -password $password
+
     Show-ExternalError
 }
 
@@ -335,7 +353,7 @@ function Invoke-TSQLTTestRunner {
         $results = sqlcmd -E -b -S "$hostName,$port" -d "$dbName" -h-1 -I -Q "$getTestResultsSql" -t $queryTimeout
 
         # Catch when an error happens in the test run (e.g. query timeout). This may not be the correct error from SSMS but will fail the build
-        if ($results -notlike "*testsuites*"){
+        if ($results -notlike "*testsuites*") {
             throw $results
         }
        
@@ -345,13 +363,13 @@ function Invoke-TSQLTTestRunner {
             Invoke-Sqlcmd -ServerInstance "$hostname" -Database "$dbName" -Query "$restoreSchemaBindingSql" -QueryTimeout $queryTimeout
         }
     }
-    catch{
+    catch {
         Write-Status $(Get-ExceptionDetails $_.Exception)
         throw
-     }
+    }
     finally {
         $regex = [regex]::Match($results, '<testsuites>[\s\S]+<\/testsuites>')
-        if($regex.Success){
+        if ($regex.Success) {
             $regex.captures.groups[0].value > $resultsFile
         }
     }
@@ -442,42 +460,50 @@ function Invoke-Flyway {
         [string]$baselineVersion = 0, # Starting Version Number for Migration
         [string]$projectRoot,
         [switch]$enableOutOfOrder = $false,
-		[switch]$validateMigrations = $false
+        [switch]$validateMigrations = $false,
+        [string]$username,
+        [SecureString]$password
     )
     $ErrorActionPreference = "Stop";
 
-    $flywayLocations =  "filesystem:`"" + (Resolve-Path $scriptFolder) + "`"" 
+    $flywayLocations = "filesystem:`"" + (Resolve-Path $scriptFolder) + "`"" 
 
     Write-Status "Run flyway..."
-    try
-    {
+    try {
         $outOfOrderValue = $enableOutOfOrder.ToString().ToLower()
-		$validateOnMigrateValue = $validateMigrations.ToString().ToLower()
+        $validateOnMigrateValue = $validateMigrations.ToString().ToLower()
         $managedSchemas = (Get-DMConfig -projectRoot $projectRoot).Flyway.managedSchema
-        $jdbcUrl = Get-DbConnectionUrl -hostName $hostName -port $port -database $dbName
+        $jdbcUrl = Get-DbConnectionUrl -hostName $hostName -port $port -database $dbName -useIntegratedSecurity:$(!$username)
         $flywayParamArray = @(
             '-n'
-            "-url=$jdbcUrl"
-            "-placeholders.DatabaseName=$dbName"
+            "-url=`"$jdbcUrl`""
             "-locations=$flywayLocations"
             "-installedBy=$currentUserName"
             "-table=$MigrationHistoryTable"
             "-baselineOnMigrate=true"
-            "-baselineVersion=$baselineVersion"
+            "-baselineVersion=`"$baselineVersion`""
             "-schemas=`"$managedSchemas`""
             "-outOfOrder=$outOfOrderValue"
-			"-validateOnMigrate=$validateOnMigrateValue"
+            "-validateOnMigrate=$validateOnMigrateValue"
         )
+        
+        Write-Host "Running migrations: [flyway $flywayParams migrate]"
+
+        if ($username) {
+            $plainPassword = Get-PlainTextPassword $password
+
+            $flywayParamArray += "-user=`"$username`""
+            $flywayParamArray += "-password=`"$plainPassword`""
+        }
+
         $flywayParams = [string]::Join(" ", $flywayParamArray)
         if ($baselineVersion -gt 0) {
             $flywayParams = $flywayParams + " -ignoreMissingMigrations=true"
         }
-        Write-Verbose "Running migrations: [flyway $flywayParams migrate]"
-        Invoke-Log ( cmd /c "flyway $flywayParams migrate" )
+        Invoke-Expression -Command "& flyway $flywayParams migrate" -ErrorAction Stop
         Show-ExternalError
     }
-    catch
-    {
+    catch {
         Write-Status $(Get-ExceptionDetails $_.Exception)
         throw
     }
@@ -493,31 +519,39 @@ function Invoke-FlywayBaseline {
         [string]$hostName, # the name of the SQL Server instance (always required)
         [string]$MigrationHistoryTable, #= "TestingHistory" #"Flyway.Testing"
         [string]$baselineVersion = 0, # Starting Version Number for Migration
-        [string]$projectRoot
+        [string]$projectRoot,
+        [string]$username,
+        [SecureString]$password
     )
     $ErrorActionPreference = "Stop";
 
     Write-Status "Run Flyway baseline..."
-    try
-    {
-        $jdbcUrl = Get-DbConnectionUrl -hostName $hostName -port $port -database $dbName
+    try {
+        $jdbcUrl = Get-DbConnectionUrl -hostName $hostName -port $port -database $dbName -useIntegratedSecurity:(!$username)
         $managedSchemas = (Get-DMConfig -projectRoot $projectRoot).Flyway.managedSchema
         $flywayParamArray = @(
             '-n'
-            "-url=$jdbcUrl"
-            "-placeholders.DatabaseName=$dbName"
+            "-url=`"$jdbcUrl`""
             "-table=$MigrationHistoryTable"
             "-baselineVersion=$baselineVersion"
             "-schemas=`"$managedSchemas`""
         )
-        $flywayParams = [string]::Join(" ", $flywayParamArray)
 
         Write-Verbose "Running migrations: [flyway $flywayParams baseline]"
-        Invoke-Log ( cmd /c "flyway $flywayParams baseline" )
+
+        if ($username) {
+            $plainPassword = Get-PlainTextPassword $password
+
+            $flywayParamArray += "-user=`"$username`""
+            $flywayParamArray += "-password=`"$plainPassword`""
+        }
+
+        $flywayParams = [string]::Join(" ", $flywayParamArray)
+
+        Invoke-Expression -Command "& flyway $flywayParams baseline" -ErrorAction Stop
         Show-ExternalError
     }
-    catch
-    {
+    catch {
         Write-Error $_.Exception
         throw
     }

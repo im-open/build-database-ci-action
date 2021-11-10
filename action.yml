@@ -46,9 +46,15 @@ inputs:
     description: A switch specifying whether or not to seed data into the database.
     required: false
     default: 'false'
+  db-username:
+    description: The username to log into the database with. If not set, then integrated security will be used.
+    required: false
+  db-password:
+    description: The password associated with the db-username used for login.
+    required: false
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Install Database Dependencies
       shell: pwsh
@@ -57,7 +63,8 @@ runs:
     - name: Build Database
       shell: pwsh
       run: |
-        $securePassword = if(!!"${{ inputs.nuget-password }}") { ConvertTo-SecureString "${{ inputs.nuget-password }}" -AsPlainText -Force } else { $null }
+        $secureNugetPassword = if(!!"${{ inputs.nuget-password }}") { ConvertTo-SecureString "${{ inputs.nuget-password }}" -AsPlainText -Force } else { $null }
+        $secureDbPassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
 
         ${{ github.action_path }}/scripts/build-flyway.ps1 `
         -dbServerName "${{ inputs.db-server-name }}" `
@@ -66,9 +73,11 @@ runs:
         -installMockDbObjects:$${{ inputs.install-mock-db-objects }} `
         -mockDbObjectNugetFeedUrl "${{ inputs.mock-db-object-nuget-feed-url }}" `
         -nugetUser "${{ inputs.nuget-username }}" `
-        -nugetPassword $securePassword `
+        -nugetPassword $secureNugetPassword `
         -incremental:$${{ inputs.incremental }} `
         -runTests:$${{ inputs.run-tests }} `
         -dropDbAfterBuild:$${{ inputs.drop-db-after-build }} `
         -validateMigrations:$${{ inputs.should-validate-migrations }} `
-        -seedData:$${{ inputs.seed-data }}
+        -seedData:$${{ inputs.seed-data }} `
+        -dbUsername "${{ inputs.db-username }}" `
+        -dbPassword $secureDbPassword

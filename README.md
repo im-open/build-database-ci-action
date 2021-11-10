@@ -1,7 +1,5 @@
 # build-database-ci-action
 
-_This action only works on Windows Action Runners at the moment. There are plans to make it work on Linux Runners in the future._
-
 This action uses [Flyway](https://flywaydb.org/) to spin up the specified database, run your migration scripts against it, and run your [tSQLt](https://tsqlt.org/) tests.
 
 ## Inputs
@@ -19,13 +17,15 @@ This action uses [Flyway](https://flywaydb.org/) to spin up the specified databa
 | `drop-db-after-build`           | false       | true    | Specifies whether or not to drop the database after building. Set this to false if other steps in the job rely on the database existing.                                                                      |
 | `should-validate-migrations`    | true        | false   | Determines whether flyway will validate the migration scripts before running them.                                                                                                                            |
 | `seed-data`                     | false       | false   | A switch specifying whether or not to seed data into the database.                                                                                                                                            |
+| `db-username`                   | false       | N/A     | The username to log into the database with. If not set, then integrated security will be used.                                                                                                                |
+| `db-password`                   | false       | N/A     | The password associated with the db-username used for login.                                                                                                                                                  |
 
 ## Example
 
 ```yml
 jobs:
   build-database:
-    runs-on: [self-hosted, windows-2019]
+    runs-on: [self-hosted, ubuntu-20.04]
     steps:
       - uses: actions/checkout@v2
 
@@ -35,7 +35,7 @@ jobs:
           version: 7.2.0
 
       - name: Build Database
-        uses: im-open/build-database-ci-action@v1.0.7
+        uses: im-open/build-database-ci-action@v2.0.0
         with:
           db-server-name: localhost
           db-name: MyLocalDB
@@ -47,6 +47,8 @@ jobs:
           run-tests: true
           drop-db-after-build: false
           should-validate-migrations: false
+          db-username: sa
+          db-password: ${{ secrets.DB_PASSWORD }}
 ```
 
 

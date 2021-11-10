@@ -55,7 +55,7 @@ function Install-DbObjectDependencies {
         $version = $_.version
         $schema = $packageName.Split('.')[0]
         $url = "$nugetFeedUrl/Database/$schema/$packageName.$version.nupkg"
-        $nugetOutput = "$outputFolder\$packageName.nupkg"
+        $nugetOutput = "$outputFolder/$packageName.nupkg"
         Write-Host "$packageName.$version"
         Remove-Item $nugetOutput -Force -Recurse -ErrorAction Ignore
         
@@ -72,7 +72,7 @@ function Install-DbObjectDependencies {
         }
         
         #Extract Package
-        $extractionLocation = "$outputFolder\$packageName"
+        $extractionLocation = "$outputFolder/$packageName"
         Remove-Item $extractionLocation -Force -Recurse -ErrorAction Ignore
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         [System.IO.Compression.ZipFile]::ExtractToDirectory($nugetOutput, $extractionLocation)

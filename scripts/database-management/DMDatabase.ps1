@@ -6,7 +6,9 @@ function Invoke-SqlByFileName {
         [string]$hostName,
         [string]$port,        
         [string]$targetDatabase,
-        [string]$connectionDatabase
+        [string]$connectionDatabase,
+        [string]$username,
+        [SecureString]$password
     )
     
     $parameters = @(
@@ -19,6 +21,14 @@ function Invoke-SqlByFileName {
         "-Verbose"
         "-Variable @(`"DatabaseName = $targetDatabase`")"
     )
+
+    if ($username) {
+        $plainPassword = Get-PlainTextPassword $password
+
+        $parameters += "-Username $username"
+        $parameters += "-Password '$plainPassword'"
+    }
+
     $parametersString = [string]::Join(" ", $parameters)
     $expression = "Invoke-Sqlcmd $parametersString"
     Invoke-Expression $expression
@@ -48,8 +58,15 @@ function Get-DbConnectionUrl () {
     param (
         [string]$hostName,
         [string]$port,
-        [string]$database
+        [string]$database,
+        [switch]$useIntegratedSecurity
     )
 
-    return "jdbc:sqlserver://${hostName}:$port;databaseName=$database;integratedSecurity=true;"
+    $jdbcUrl = "jdbc:sqlserver://${hostName}:$port;databaseName=$database;"
+
+    if ($useIntegratedSecurity) {
+        $jdbcUrl += "integratedSecurity=true;"
+    }
+
+    return $jdbcUrl
 }
