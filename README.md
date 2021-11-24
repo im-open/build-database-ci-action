@@ -2,6 +2,8 @@
 
 This action uses [Flyway](https://flywaydb.org/) to spin up the specified database, run your migration scripts against it, and run your [tSQLt](https://tsqlt.org/) tests. 
 
+## Index
+
 - [Inputs](#inputs)
 - [Example](#example)
 - [Contributing](#contributing)
