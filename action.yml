@@ -140,17 +140,28 @@ runs:
       if: ${{ inputs.incremental == 'false' }}
       shell: pwsh
       run: |
-        Invoke-Sqlcmd `
-          -InputFile "${{ inputs.create-database-file }}" `
-          -ServerInstance "${{ inputs.db-server-name }},${{ inputs.db-server-port }}" `
-          -Database "master" `
-          -Username "${{ inputs.db-username }}" `
-          -Password "${{ inputs.db-password }}" `
-          -AbortOnError `
-          -SeverityLevel 0 `
-          -ErrorLevel 0 `
-          -Verbose `
-          -Variable @("DatabaseName = `"${{ inputs.db-name }}`"")
+        [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
+
+        ${{ github.action_path }}/src/run-sql-command-for-file.ps1 `
+          -dbServer "${{ inputs.db-server-name }},${{ inputs.db-server-port }}" `
+          -dbName "master" `
+          -pathToFile "${{ inputs.create-database-file }}" `
+          -sqlCmdVariables "DatabaseName = ${{ inputs.db-name }}" `
+          -useIntegratedSecurity:$${{ inputs.use-integrated-security }} `
+          -username "${{ inputs.db-username }}" `
+          -password $securePassword
+
+        # Invoke-Sqlcmd `
+        #   -InputFile "${{ inputs.create-database-file }}" `
+        #   -ServerInstance "${{ inputs.db-server-name }},${{ inputs.db-server-port }}" `
+        #   -Database "master" `
+        #   -Username "${{ inputs.db-username }}" `
+        #   -Password "${{ inputs.db-password }}" `
+        #   -AbortOnError `
+        #   -SeverityLevel 0 `
+        #   -ErrorLevel 0 `
+        #   -Verbose `
+        #   -Variable @("DatabaseName = `"${{ inputs.db-name }}`"")
 
     - name: Install DB Dependencies
       if: ${{ inputs.install-mock-db-objects == 'true' }}
@@ -198,7 +209,7 @@ runs:
           $baselineVersion = 0.1 # this will allow us to ignore missing migrations when running flyway
         }
 
-        ${{ github.action_path }}/src/run-flyway.ps1 `
+        ${{ github.action_path }}/src/run-flyway/run-flyway-migrate.ps1 `
         -dbServer "${{ inputs.db-server-name }}" `
         -dbServerPort "${{ inputs.db-server-port }}" `
         -dbName "${{ inputs.db-name }}" `
