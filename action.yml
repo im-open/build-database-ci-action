@@ -47,9 +47,12 @@ inputs:
     description: The file path to the sql file that initializes the database. This script will only be run if the incremental property is false.
     required: false
   run-tests:
-    description: Specifies whether or not to run tests.
+    description: Specifies whether or not to run tests. If true, test-files-path should also be set.
     required: false
     default: 'false'
+  test-files-path:
+    description: The path to the files with tSQLt tests.
+    required: false
   drop-db-after-build:
     description: Specifies whether or not to drop the database after building. Set this to false if other steps in the job rely on the database existing.
     required: false
@@ -151,18 +154,6 @@ runs:
           -username "${{ inputs.db-username }}" `
           -password $securePassword
 
-        # Invoke-Sqlcmd `
-        #   -InputFile "${{ inputs.create-database-file }}" `
-        #   -ServerInstance "${{ inputs.db-server-name }},${{ inputs.db-server-port }}" `
-        #   -Database "master" `
-        #   -Username "${{ inputs.db-username }}" `
-        #   -Password "${{ inputs.db-password }}" `
-        #   -AbortOnError `
-        #   -SeverityLevel 0 `
-        #   -ErrorLevel 0 `
-        #   -Verbose `
-        #   -Variable @("DatabaseName = `"${{ inputs.db-name }}`"")
-
     - name: Install DB Dependencies
       if: ${{ inputs.install-mock-db-objects == 'true' }}
       shell: pwsh
@@ -210,17 +201,17 @@ runs:
         }
 
         ${{ github.action_path }}/src/run-flyway/run-flyway-migrate.ps1 `
-        -dbServer "${{ inputs.db-server-name }}" `
-        -dbServerPort "${{ inputs.db-server-port }}" `
-        -dbName "${{ inputs.db-name }}" `
-        -pathToMigrationFiles "${{ inputs.migration-files-path }}" `
-        -migrationHistoryTable "MigrationHistory" `
-        -baselineVersion $baselineVersion `
-        -managedSchemas "${{ inputs.managed-schemas }}" `
-        -validateMigrations:$${{ inputs.should-validate-migrations }} `
-        -useIntegratedSecurity:$${{ inputs.use-integrated-security }} `
-        -username "${{ inputs.db-username }}" `
-        -password $securePassword
+          -dbServer "${{ inputs.db-server-name }}" `
+          -dbServerPort "${{ inputs.db-server-port }}" `
+          -dbName "${{ inputs.db-name }}" `
+          -pathToMigrationFiles "${{ inputs.migration-files-path }}" `
+          -migrationHistoryTable "MigrationHistory" `
+          -baselineVersion $baselineVersion `
+          -managedSchemas "${{ inputs.managed-schemas }}" `
+          -validateMigrations:$${{ inputs.should-validate-migrations }} `
+          -useIntegratedSecurity:$${{ inputs.use-integrated-security }} `
+          -username "${{ inputs.db-username }}" `
+          -password $securePassword
 
     # # Run the migration scripts containing the tSQLt tests
     # - name: Set up the tests
@@ -237,6 +228,24 @@ runs:
     #     use-integrated-security: 'false' # Integrated Security only works on Windows runners
     #     username: '${{ env.SQL_LOGIN_USERNAME }}' # If using integrated security the only place this is used is in the migration history table
     #     password: '${{ secrets.ACTIONS_RUNNER_MSSQL_SA_PWD }}' # This is an org-level secret
+
+    - name: Run migration scripts
+      if: ${{ inputs.run-tests == 'true' }}
+      shell: pwsh
+      run: |
+        [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
+
+        ${{ github.action_path }}/src/run-flyway/run-flyway-migrate.ps1 `
+          -dbServer "${{ inputs.db-server-name }}" `
+          -dbServerPort "${{ inputs.db-server-port }}" `
+          -dbName "${{ inputs.db-name }}" `
+          -pathToMigrationFiles "${{ inputs.test-files-path }}" `
+          -migrationHistoryTable "TestingHistory" `
+          -managedSchemas "${{ inputs.managed-schemas }}" `
+          -validateMigrations `
+          -useIntegratedSecurity:$${{ inputs.use-integrated-security }} `
+          -username "${{ inputs.db-username }}" `
+          -password $securePassword
 
     # # TODO: The following schema binding steps are necessary for some teams' tests.
     # #       Remove the steps if your tests do not require schema binding to be off.
