@@ -92,6 +92,7 @@ runs:
       if: ${{ inputs.incremental == 'false' }}
       shell: pwsh
       run: |
+        Write-Output "Creating the database"
         [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
 
         ${{ github.action_path }}/src/run-sql-command-for-file.ps1 `
@@ -107,6 +108,8 @@ runs:
       if: ${{ inputs.install-mock-db-objects == 'true' }}
       shell: pwsh
       run: |
+        Write-Output "Installing dependencies"
+
         $parsedDependencies = ConvertFrom-Json "${{ inputs.mock-db-object-dependency-list }}"
         ${{ github.action_path }}\src\dependency-scripts\download-db-dependencies.ps1 -dependencies $parsedDependencies
 
@@ -126,6 +129,8 @@ runs:
     - name: Run migration scripts
       shell: pwsh
       run: |
+        Write-Output "Running migration scripts"
+
         [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
         $baselineVersion = 0
 
@@ -151,6 +156,7 @@ runs:
       if: ${{ inputs.run-tests == 'true' }}
       shell: pwsh
       run: |
+        Write-Output "Setting up tests"
         [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
 
         ${{ github.action_path }}/src/run-flyway/run-flyway-migrate.ps1 `
@@ -170,6 +176,8 @@ runs:
       id: schema-binding-queries
       shell: pwsh
       run: |
+        Write-Output "Toggling off schema binding for tests"
+
         $fakeTablePattern = "tSQLt.FakeTable\s+(@TableName\s*=\s*)?N?'([^']+)'"
         $objectNames = (
           Get-ChildItem ./src/TempTests/*.sql -File -Recurse |
@@ -281,6 +289,8 @@ runs:
       if: ${{ inputs.run-tests == 'true' }}
       shell: pwsh
       run: |
+        Write-Output "Running tSQLt tests"
+
         [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
 
         ${{ github.action_path }}/src/tsqlt/run-tsqlt.ps1 `
@@ -308,6 +318,8 @@ runs:
       if: ${{ inputs.run-tests == 'true' }}
       shell: pwsh
       run: |
+        Write-Output "Toggling on schema binding"
+
         $restoreSchemaBindingSql = "${{ steps.schema-binding-queries.outputs.restore_schema_binding_query }}"
         if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql))
         {
@@ -318,6 +330,8 @@ runs:
       if: ${{ inputs.seed-data == 'true' }}
       shell: pwsh
       run: |
+        Write-Output "Seeding data into the database"
+
         [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
 
         ${{ github.action_path }}/src/run-flyway/run-flyway-migrate.ps1 `
