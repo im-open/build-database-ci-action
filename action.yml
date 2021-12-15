@@ -59,6 +59,10 @@ inputs:
     description: A switch specifying whether or not to seed data into the database. If true, seed-data-files-path must also be set.
     required: false
     default: 'false'
+  test-timeout:
+    description: An optional setting for the allowed wait time, in seconds, for the tests to execute. If tests sometimes hang, or shouldn't take longer than a certain amount of time, this parameter can be helpful.
+    required: false
+    default: '300'
   seed-data-files-path:
     description: The path to the files with seeding database.
     required: false
@@ -152,20 +156,37 @@ runs:
           -username "${{ inputs.db-username }}" `
           -password $securePassword
 
-    - name: Run test setup scripts
+    # - name: Run test setup scripts
+    #   if: ${{ inputs.run-tests == 'true' }}
+    #   shell: pwsh
+    #   run: |
+    #     Write-Output "Setting up tests"
+    #     [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
+
+    #     ${{ github.action_path }}/src/run-flyway/run-flyway-migrate.ps1 `
+    #       -dbServer "${{ inputs.db-server-name }}" `
+    #       -dbServerPort "${{ inputs.db-server-port }}" `
+    #       -dbName "${{ inputs.db-name }}" `
+    #       -pathToMigrationFiles "${{ inputs.test-files-path }}" `
+    #       -migrationHistoryTable "TestingHistory" `
+    #       -managedSchemas "${{ inputs.managed-schemas }}" `
+    #       -useIntegratedSecurity:$${{ inputs.use-integrated-security }} `
+    #       -username "${{ inputs.db-username }}" `
+    #       -password $securePassword
+
+    - name: Run tests
       if: ${{ inputs.run-tests == 'true' }}
       shell: pwsh
       run: |
-        Write-Output "Setting up tests"
         [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
 
-        ${{ github.action_path }}/src/run-flyway/run-flyway-migrate.ps1 `
+        ${{ github.action_path }}/src/tsqlt/run-tests.ps1 `
           -dbServer "${{ inputs.db-server-name }}" `
           -dbServerPort "${{ inputs.db-server-port }}" `
           -dbName "${{ inputs.db-name }}" `
-          -pathToMigrationFiles "${{ inputs.test-files-path }}" `
-          -migrationHistoryTable "TestingHistory" `
+          -pathToTests "${{ inputs.test-files-path }}" `
           -managedSchemas "${{ inputs.managed-schemas }}" `
+          -queryTimeout "${{ inputs.test-timeout }}" `
           -useIntegratedSecurity:$${{ inputs.use-integrated-security }} `
           -username "${{ inputs.db-username }}" `
           -password $securePassword
@@ -296,7 +317,7 @@ runs:
           -dbServer "${{ inputs.db-server-name }}" `
           -dbServerPort "${{ inputs.db-server-port }}" `
           -dbName "${{ inputs.db-name }}" `
-          -queryTimeout "${{ inputs.query-timeout }}" `
+          -queryTimeout "${{ inputs.test-timeout }}" `
           -useIntegratedSecurity:$${{ inputs.use-integrated-security }} `
           -username "${{ inputs.db-username }}" `
           -password $securePassword
