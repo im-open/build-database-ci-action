@@ -166,7 +166,6 @@ runs:
           -pathToMigrationFiles "${{ inputs.test-files-path }}" `
           -migrationHistoryTable "TestingHistory" `
           -managedSchemas "${{ inputs.managed-schemas }}" `
-          -validateMigrations `
           -useIntegratedSecurity:$${{ inputs.use-integrated-security }} `
           -username "${{ inputs.db-username }}" `
           -password $securePassword
