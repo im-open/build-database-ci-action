@@ -191,160 +191,160 @@ runs:
           -username "${{ inputs.db-username }}" `
           -password $securePassword
 
-    - name: Output toggle schema binding queries for test objects
-      if: ${{ inputs.run-tests == 'true' }}
-      id: schema-binding-queries
-      shell: pwsh
-      run: |
-        Write-Output "Toggling off schema binding for tests"
+    # - name: Output toggle schema binding queries for test objects
+    #   if: ${{ inputs.run-tests == 'true' }}
+    #   id: schema-binding-queries
+    #   shell: pwsh
+    #   run: |
+    #     Write-Output "Toggling off schema binding for tests"
 
-        $fakeTablePattern = "tSQLt.FakeTable\s+(@TableName\s*=\s*)?N?'([^']+)'"
-        $objectNames = (
-          Get-ChildItem ./src/TempTests/*.sql -File -Recurse |
-          Where-Object { $_.Name.StartsWith("R__") } |
-          ForEach-Object {
-            Get-Content -Raw $_.FullName |
-            Select-String -Pattern $fakeTablePattern -AllMatches |
-            ForEach-Object { $_.Matches } |
-            ForEach-Object { $_.Groups[2].Value }
-          } |
-          Sort-Object |
-          Get-Unique
-        )
-        $objectNames = $objectNames -join ','
-        Write-Output $objectNames
+    #     $fakeTablePattern = "tSQLt.FakeTable\s+(@TableName\s*=\s*)?N?'([^']+)'"
+    #     $objectNames = (
+    #       Get-ChildItem ./src/TempTests/*.sql -File -Recurse |
+    #       Where-Object { $_.Name.StartsWith("R__") } |
+    #       ForEach-Object {
+    #         Get-Content -Raw $_.FullName |
+    #         Select-String -Pattern $fakeTablePattern -AllMatches |
+    #         ForEach-Object { $_.Matches } |
+    #         ForEach-Object { $_.Groups[2].Value }
+    #       } |
+    #       Sort-Object |
+    #       Get-Unique
+    #     )
+    #     $objectNames = $objectNames -join ','
+    #     Write-Output $objectNames
 
-        if (-Not [string]::IsNullOrEmpty($objectNames))
-        {
-          $setStatements = "
-            SET NOEXEC OFF;
-            SET ANSI_NULL_DFLT_ON ON;
-            SET ANSI_NULLS ON;
-            SET ANSI_PADDING ON;
-            SET ANSI_WARNINGS ON;
-            SET ARITHABORT ON;
-            SET CONCAT_NULL_YIELDS_NULL ON;
-            SET QUOTED_IDENTIFIER ON;
-            SET XACT_ABORT ON;"
+    #     if (-Not [string]::IsNullOrEmpty($objectNames))
+    #     {
+    #       $setStatements = "
+    #         SET NOEXEC OFF;
+    #         SET ANSI_NULL_DFLT_ON ON;
+    #         SET ANSI_NULLS ON;
+    #         SET ANSI_PADDING ON;
+    #         SET ANSI_WARNINGS ON;
+    #         SET ARITHABORT ON;
+    #         SET CONCAT_NULL_YIELDS_NULL ON;
+    #         SET QUOTED_IDENTIFIER ON;
+    #         SET XACT_ABORT ON;"
 
-          $getToggleQuery = "
-            $setStatements
-            DECLARE @unbindSql VARCHAR(MAX);
-            DECLARE @rebindSql VARCHAR(MAX);
+    #       $getToggleQuery = "
+    #         $setStatements
+    #         DECLARE @unbindSql VARCHAR(MAX);
+    #         DECLARE @rebindSql VARCHAR(MAX);
 
-            BEGIN TRY
-              EXEC DBA.usp_ToggleSchemaBindingBatch @objectList = N'$objectNames', @mode = 'VARIABLE', @isSchemaBoundOnly = 1, @unbindSql = @unbindSql OUTPUT, @rebindSql = @rebindSql OUTPUT;
-              SELECT @unbindSql as unbindSql, @rebindSql as rebindSql;
-            END TRY
-            BEGIN CATCH
-              THROW;
-            END CATCH;"
+    #         BEGIN TRY
+    #           EXEC DBA.usp_ToggleSchemaBindingBatch @objectList = N'$objectNames', @mode = 'VARIABLE', @isSchemaBoundOnly = 1, @unbindSql = @unbindSql OUTPUT, @rebindSql = @rebindSql OUTPUT;
+    #           SELECT @unbindSql as unbindSql, @rebindSql as rebindSql;
+    #         END TRY
+    #         BEGIN CATCH
+    #           THROW;
+    #         END CATCH;"
 
-          $toggleQueryTimeout = 120
+    #       $toggleQueryTimeout = 120
 
-          Write-Output "Getting schemabinding toggle queries"
-          $toggleschemabinding = Invoke-Sqlcmd -ServerInstance "${{ inputs.db-server-name }},${{ inputs.db-server-port }}" -Database "${{ inputs.db-name }}" -Query "$getToggleQuery" -QueryTimeout $toggleQueryTimeout -MaxCharLength 150000
-          Write-Output "Setting removeSchemaBindingSql"
-          $removeSchemaBindingSql = "
-            $setStatements
-            BEGIN TRY
-              BEGIN TRANSACTION;
-              " + $toggleschemabinding.unbindSql + "
-              COMMIT TRANSACTION;
-            END TRY
-            BEGIN CATCH
-              IF (@@TRANCOUNT > 0)
-              BEGIN
-                ROLLBACK TRANSACTION;
-              END;
+    #       Write-Output "Getting schemabinding toggle queries"
+    #       $toggleschemabinding = Invoke-Sqlcmd -ServerInstance "${{ inputs.db-server-name }},${{ inputs.db-server-port }}" -Database "${{ inputs.db-name }}" -Query "$getToggleQuery" -QueryTimeout $toggleQueryTimeout -MaxCharLength 150000
+    #       Write-Output "Setting removeSchemaBindingSql"
+    #       $removeSchemaBindingSql = "
+    #         $setStatements
+    #         BEGIN TRY
+    #           BEGIN TRANSACTION;
+    #           " + $toggleschemabinding.unbindSql + "
+    #           COMMIT TRANSACTION;
+    #         END TRY
+    #         BEGIN CATCH
+    #           IF (@@TRANCOUNT > 0)
+    #           BEGIN
+    #             ROLLBACK TRANSACTION;
+    #           END;
 
-              THROW;
-              RETURN;
-            END CATCH;"
+    #           THROW;
+    #           RETURN;
+    #         END CATCH;"
 
-          Write-Output "Setting restoreSchemaBindingSql"
-          $restoreSchemaBindingSql = "
-            $setStatements
-            BEGIN TRY
-              BEGIN TRANSACTION;
-              " + $toggleschemabinding.rebindSql + "
-              COMMIT TRANSACTION;
-            END TRY
-            BEGIN CATCH
-              IF (@@TRANCOUNT > 0)
-              BEGIN
-                ROLLBACK TRANSACTION;
-              END;
+    #       Write-Output "Setting restoreSchemaBindingSql"
+    #       $restoreSchemaBindingSql = "
+    #         $setStatements
+    #         BEGIN TRY
+    #           BEGIN TRANSACTION;
+    #           " + $toggleschemabinding.rebindSql + "
+    #           COMMIT TRANSACTION;
+    #         END TRY
+    #         BEGIN CATCH
+    #           IF (@@TRANCOUNT > 0)
+    #           BEGIN
+    #             ROLLBACK TRANSACTION;
+    #           END;
 
-              THROW;
-              RETURN;
-            END CATCH;"
+    #           THROW;
+    #           RETURN;
+    #         END CATCH;"
 
-          # Substitute newline characters so we can output them
-          $removeSchemaBindingSql = $removeSchemaBindingSql.Replace("%", "%25")
-          $removeSchemaBindingSql = $removeSchemaBindingSql.Replace("`n", "%0A")
-          $removeSchemaBindingSql = $removeSchemaBindingSql.Replace("`r", "%0D")
-          $removeSchemaBindingSql = $removeSchemaBindingSql.Replace('"', '`"')
+    #       # Substitute newline characters so we can output them
+    #       $removeSchemaBindingSql = $removeSchemaBindingSql.Replace("%", "%25")
+    #       $removeSchemaBindingSql = $removeSchemaBindingSql.Replace("`n", "%0A")
+    #       $removeSchemaBindingSql = $removeSchemaBindingSql.Replace("`r", "%0D")
+    #       $removeSchemaBindingSql = $removeSchemaBindingSql.Replace('"', '`"')
 
-          $restoreSchemaBindingSql = $restoreSchemaBindingSql.Replace("%", "%25")
-          $restoreSchemaBindingSql = $restoreSchemaBindingSql.Replace("`n", "%0A")
-          $restoreSchemaBindingSql = $restoreSchemaBindingSql.Replace("`r", "%0D")
-          $restoreSchemaBindingSql = $restoreSchemaBindingSql.Replace('"', '`"')
+    #       $restoreSchemaBindingSql = $restoreSchemaBindingSql.Replace("%", "%25")
+    #       $restoreSchemaBindingSql = $restoreSchemaBindingSql.Replace("`n", "%0A")
+    #       $restoreSchemaBindingSql = $restoreSchemaBindingSql.Replace("`r", "%0D")
+    #       $restoreSchemaBindingSql = $restoreSchemaBindingSql.Replace('"', '`"')
 
-          echo "::set-output name=remove_schema_binding_query::$removeSchemaBindingSql"
-          echo "::set-output name=restore_schema_binding_query::$restoreSchemaBindingSql"
-        }
+    #       echo "::set-output name=remove_schema_binding_query::$removeSchemaBindingSql"
+    #       echo "::set-output name=restore_schema_binding_query::$restoreSchemaBindingSql"
+    #     }
 
-    - name: Toggle off schema binding for objects that need it
-      if: ${{ inputs.run-tests == 'true' }}
-      shell: pwsh
-      run: |
-        $removeSchemaBindingSql = "${{ steps.schema-binding-queries.outputs.remove_schema_binding_query }}"
-        if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql))
-        {
-          Invoke-Sqlcmd -ServerInstance "${{ inputs.db-server-name }},${{ inputs.db-server-port }}" -Database "${{ inputs.db-name }}" -Query "$removeSchemaBindingSql" -QueryTimeout 120
-        }
+    # - name: Toggle off schema binding for objects that need it
+    #   if: ${{ inputs.run-tests == 'true' }}
+    #   shell: pwsh
+    #   run: |
+    #     $removeSchemaBindingSql = "${{ steps.schema-binding-queries.outputs.remove_schema_binding_query }}"
+    #     if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql))
+    #     {
+    #       Invoke-Sqlcmd -ServerInstance "${{ inputs.db-server-name }},${{ inputs.db-server-port }}" -Database "${{ inputs.db-name }}" -Query "$removeSchemaBindingSql" -QueryTimeout 120
+    #     }
 
-    - name: Run tSqlt tests
-      if: ${{ inputs.run-tests == 'true' }}
-      shell: pwsh
-      run: |
-        Write-Output "Running tSQLt tests"
+    # - name: Run tSqlt tests
+    #   if: ${{ inputs.run-tests == 'true' }}
+    #   shell: pwsh
+    #   run: |
+    #     Write-Output "Running tSQLt tests"
 
-        [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
+    #     [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
 
-        ${{ github.action_path }}/src/tsqlt/run-tsqlt.ps1 `
-          -dbServer "${{ inputs.db-server-name }}" `
-          -dbServerPort "${{ inputs.db-server-port }}" `
-          -dbName "${{ inputs.db-name }}" `
-          -queryTimeout "${{ inputs.test-timeout }}" `
-          -useIntegratedSecurity:$${{ inputs.use-integrated-security }} `
-          -username "${{ inputs.db-username }}" `
-          -password $securePassword
+    #     ${{ github.action_path }}/src/tsqlt/run-tsqlt.ps1 `
+    #       -dbServer "${{ inputs.db-server-name }}" `
+    #       -dbServerPort "${{ inputs.db-server-port }}" `
+    #       -dbName "${{ inputs.db-name }}" `
+    #       -queryTimeout "${{ inputs.test-timeout }}" `
+    #       -useIntegratedSecurity:$${{ inputs.use-integrated-security }} `
+    #       -username "${{ inputs.db-username }}" `
+    #       -password $securePassword
 
-    - name: Print test results
-      if: ${{ inputs.run-tests == 'true' }}
-      id: results
-      shell: pwsh
-      run: ${{ github.action_path }}/src/tsqlt/print-results.ps1
+    # - name: Print test results
+    #   if: ${{ inputs.run-tests == 'true' }}
+    #   id: results
+    #   shell: pwsh
+    #   run: ${{ github.action_path }}/src/tsqlt/print-results.ps1
 
-    - name: Output test results file path
-      if: ${{ inputs.run-tests == 'true' }}
-      id: results-file
-      shell: bash
-      run: echo "::set-output name=file_path::${{ github.action_path }}/test-results/test-results.xml"
+    # - name: Output test results file path
+    #   if: ${{ inputs.run-tests == 'true' }}
+    #   id: results-file
+    #   shell: bash
+    #   run: echo "::set-output name=file_path::${{ github.action_path }}/test-results/test-results.xml"
 
-    - name: Toggle schema binding back on
-      if: ${{ inputs.run-tests == 'true' }}
-      shell: pwsh
-      run: |
-        Write-Output "Toggling on schema binding"
+    # - name: Toggle schema binding back on
+    #   if: ${{ inputs.run-tests == 'true' }}
+    #   shell: pwsh
+    #   run: |
+    #     Write-Output "Toggling on schema binding"
 
-        $restoreSchemaBindingSql = "${{ steps.schema-binding-queries.outputs.restore_schema_binding_query }}"
-        if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql))
-        {
-          Invoke-Sqlcmd -ServerInstance "${{ inputs.db-server-name }},${{ inputs.db-server-port }}" -Database "${{ inputs.db-name }}" -Query "$restoreSchemaBindingSql" -QueryTimeout 120
-        }
+    #     $restoreSchemaBindingSql = "${{ steps.schema-binding-queries.outputs.restore_schema_binding_query }}"
+    #     if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql))
+    #     {
+    #       Invoke-Sqlcmd -ServerInstance "${{ inputs.db-server-name }},${{ inputs.db-server-port }}" -Database "${{ inputs.db-name }}" -Query "$restoreSchemaBindingSql" -QueryTimeout 120
+    #     }
 
     - name: Run seed data scripts
       if: ${{ inputs.seed-data == 'true' }}
