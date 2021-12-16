@@ -8,6 +8,7 @@ param (
     [securestring]$password
 )
 
+$ErrorActionPreference = "Stop";
 Import-Module SqlServer
 
 $sqlCmdParams = @(
