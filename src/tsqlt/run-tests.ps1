@@ -131,8 +131,6 @@ Write-Output "Running tSQLt tests"
 
 & $PSScriptRoot/print-results.ps1
 
-echo "::set-output name=file_path::$PSScriptRoot\test-results\test-results.xml"
-
 Write-Output "Toggling on schema binding"
 
 if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
