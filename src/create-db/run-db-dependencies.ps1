@@ -8,7 +8,7 @@ param (
 
 Write-Host "Running database dependency scripts"
 
-$dependencyFolder = "$PSScriptRoot\.dependencies"
+$dependencyFolder = "$PSScriptRoot/.dependencies"
 
 Import-Module SqlServer
 

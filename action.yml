@@ -12,7 +12,7 @@ inputs:
     required: false
     default: '1433'
   db-name:
-    description: The name of the database to bubild.
+    description: The name of the database to build.
     required: true
   use-integrated-security:
     description: Use domain integrated security. This only works on windows. If running on a linux runner, set this to false or don't specify a value. If false, a db-username and db-password should be specified. If true, those parameters will be ignored if specified.

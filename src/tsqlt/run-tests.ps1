@@ -46,7 +46,14 @@ Write-Output $objectNames
 
 $removeSchemaBindingSql = $null
 $restoreSchemaBindingSql = $null
+$authSqlCmdParams = ''
 
+if (-Not $useIntegratedSecurity) {
+    $cred = New-Object System.Management.Automation.PSCredential -ArgumentList $username, $password
+    $plainPassword = $cred.GetNetworkCredential().Password
+
+    $authSqlCmdParams = "-Username `"$username`" -Password `"$plainPassword`""
+}
 
 if (-Not [string]::IsNullOrEmpty($objectNames)) {
     $setStatements = "
@@ -76,7 +83,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     $toggleQueryTimeout = 120
 
     Write-Output "Getting schemabinding toggle queries"
-    $toggleschemabinding = Invoke-Sqlcmd -ServerInstance "$dbServer,$dbServerPort" -Database "$dbName" -Query "$getToggleQuery" -QueryTimeout $toggleQueryTimeout -MaxCharLength 150000
+    $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" -Query `"$getToggleQuery`" -QueryTimeout $toggleQueryTimeout -MaxCharLength 150000 $authSqlCmdParams"
     Write-Output "Setting removeSchemaBindingSql"
     $removeSchemaBindingSql = "
         $setStatements
@@ -115,7 +122,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
 }
 
 if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
-    Invoke-Sqlcmd -ServerInstance "$dbServer,$dbServerPort" -Database "$dbName" -Query "$removeSchemaBindingSql" -QueryTimeout 120
+    Invoke-Expression -Command "Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" -Query `"$removeSchemaBindingSql`" -QueryTimeout 120 $authSqlCmdParams"
 }
 
 Write-Output "Running tSQLt tests"
@@ -134,5 +141,5 @@ Write-Output "Running tSQLt tests"
 Write-Output "Toggling on schema binding"
 
 if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
-    Invoke-Sqlcmd -ServerInstance "$dbServer,$dbServerPort" -Database "$dbName" -Query "$restoreSchemaBindingSql" -QueryTimeout 120
+    Invoke-Expression -Command "Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" -Query `"$restoreSchemaBindingSql`" -QueryTimeout 120 $authSqlCmdParams"
 }

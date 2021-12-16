@@ -14,7 +14,7 @@ param (
     [SecureString]$password
 )
 $ErrorActionPreference = "Stop";
-. $PSScriptRoot\..\exception-details.ps1
+. $PSScriptRoot/../exception-details.ps1
 
 Write-Information -InformationAction Continue -MessageData "Running migrate..."   
 
