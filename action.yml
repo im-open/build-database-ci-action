@@ -6,6 +6,7 @@ inputs:
   db-server-name:
     description: The name of the database server to build the database on.
     required: true
+    default: 'localhost'
   db-server-port:
     description: The port that the database server listens on.
     required: false
@@ -18,8 +19,9 @@ inputs:
     required: true
     default: 'false'
   db-username:
-    description: The username to use to login to the database. This is required if use-integrated-security is false, otherwise it's optional and will be ignored.
+    description: The username to use to login to the database. This is required if use-integrated-security is false, otherwise it's optional and will be ignored. The default value (sa) references the default system administrator account for SQL Server.
     required: false
+    default: 'sa'
   db-password:
     description: The password for the user logging in to the database. This is required if use-integrated-security is false, otherwise it's optional and will be ignored.
     required: false
@@ -41,22 +43,22 @@ inputs:
     description: The file path to the sql file that initializes the database. This script will only be run if the incremental property is false.
     required: false
   run-tests:
-    description: Specifies whether or not to run tests. If true, test-files-path should also be set.
+    description: Specifies whether or not to run tests. The expected values are true and false. If true, test-files-path should also be set.
     required: false
     default: 'false'
   test-files-path:
     description: The path to the files with tSQLt tests.
     required: false
   drop-db-after-build:
-    description: Specifies whether or not to drop the database after building. Set this to false if other steps in the job rely on the database existing.
+    description: Specifies whether or not to drop the database after building. The expected values are true and false. Set this to false if other steps in the job rely on the database existing.
     required: false
-    default: 'true'
+    default: 'false'
   should-validate-migrations:
     description: Determines whether flyway will validate the migration scripts before running them.
     required: true
     default: 'false'
   seed-data:
-    description: A switch specifying whether or not to seed data into the database. If true, seed-data-files-path must also be set.
+    description: A switch specifying whether or not to seed data into the database. The expected values are true and false. If true, seed-data-files-path must also be set.
     required: false
     default: 'false'
   test-timeout:
