@@ -60,6 +60,14 @@ try {
     Write-Output "Running the flyway command:"
     Write-Output "flyway $printableFlywayParams migrate"
     Invoke-Expression -Command "& flyway $flywayParams migrate" -ErrorAction Stop
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Running flyway exited with a non-successful exit code: $LASTEXITCODE"
+    }
+
+    if ($? -ne $true) {
+        throw "Running flyway failed! See the logs above for more information."
+    }
 }
 catch {
     Write-Host $_.Exception
