@@ -15,7 +15,7 @@ inputs:
     description: The name of the database to bubild.
     required: true
   use-integrated-security:
-    description: Use domain integrated security. If false, a db-username and db-password should be specified. If true, those parameters will be ignored if specified.
+    description: Use domain integrated security. This only works on windows. If running on a linux runner, set this to false or don't specify a value. If false, a db-username and db-password should be specified. If true, those parameters will be ignored if specified.
     required: true
     default: 'false'
   db-username:
@@ -34,7 +34,7 @@ inputs:
     default: 'false'
   mock-db-object-dependency-list:
     description: A json string containing a list of objects with the name of the dependency package, the version, and the url where the package is stored.
-    required: true
+    required: false
   incremental:
     description: Specifies whether to drop and recreate the database before building, or apply to the current database. The expected value is true or false. If true, the create-database-file property will not be used.
     required: false
@@ -49,6 +49,10 @@ inputs:
   test-files-path:
     description: The path to the files with tSQLt tests.
     required: false
+  test-timeout:
+    description: An optional setting for the allowed wait time, in seconds, for the tests to execute. If tests sometimes hang, or shouldn't take longer than a certain amount of time, this parameter can be helpful.
+    required: false
+    default: '300'
   drop-db-after-build:
     description: Specifies whether or not to drop the database after building. The expected values are true and false. Set this to false if other steps in the job rely on the database existing.
     required: false
@@ -61,10 +65,6 @@ inputs:
     description: A switch specifying whether or not to seed data into the database. The expected values are true and false. If true, seed-data-files-path must also be set.
     required: false
     default: 'false'
-  test-timeout:
-    description: An optional setting for the allowed wait time, in seconds, for the tests to execute. If tests sometimes hang, or shouldn't take longer than a certain amount of time, this parameter can be helpful.
-    required: false
-    default: '300'
   seed-data-files-path:
     description: The path to the files with seeding database.
     required: false
@@ -95,7 +95,6 @@ runs:
         }
 
     - name: Create Database
-      if: ${{ inputs.incremental == 'false' }}
       shell: pwsh
       run: |
         Write-Output "Creating the database"
@@ -105,10 +104,11 @@ runs:
           -dbServer "${{ inputs.db-server-name }}" `
           -dbServerPort "${{ inputs.db-server-port }}" `
           -dbName "master" `
+          -incremental:$${{ inputs.incremental }} `
           -pathToCreateDbFile "${{ inputs.create-database-file }}" `
+          -installMockDbObjects:$${{ inputs.install-mock-db-objects }} `
           -mockDependencyObjectList "${{ inputs.mock-db-object-dependency-list }}" `
           -useIntegratedSecurity:$${{ inputs.use-integrated-security }} `
-          -installMockDbObjects:$${{ inputs.install-mock-db-objects }} `
           -username "${{ inputs.db-username }}" `
           -password $securePassword
 

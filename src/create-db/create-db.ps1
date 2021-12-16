@@ -4,6 +4,7 @@ param (
     [string]$dbName,
     [string]$pathToCreateDbFile,
     [string]$mockDependencyObjectList,
+    [switch]$incremental = $false,
     [switch]$useIntegratedSecurity = $false,
     [switch]$installMockDbObjects = $false,
     [string]$username,
@@ -12,14 +13,16 @@ param (
 
 $ErrorActionPreference = "Stop";
 
-& $PSScriptRoot/../run-sql-command-for-file.ps1 `
-    -dbServer "$dbServer,$dbServerPort" `
-    -dbName "master" `
-    -pathToFile $pathToCreateDbFile `
-    -sqlCmdVariables "DatabaseName = $dbName" `
-    -useIntegratedSecurity:$useIntegratedSecurity `
-    -username $username `
-    -password $password
+if (-Not $incremental) {
+    & $PSScriptRoot/../run-sql-command-for-file.ps1 `
+        -dbServer "$dbServer,$dbServerPort" `
+        -dbName "master" `
+        -pathToFile $pathToCreateDbFile `
+        -sqlCmdVariables "DatabaseName = $dbName" `
+        -useIntegratedSecurity:$useIntegratedSecurity `
+        -username $username `
+        -password $password
+}
 
 
 if (-Not $installMockDbObjects) {
@@ -29,9 +32,9 @@ if (-Not $installMockDbObjects) {
 Write-Output "Installing dependencies"
 
 $parsedDependencies = ConvertFrom-Json $mockDependencyObjectList
-$ $PSScriptRoot/../dependency-scripts\download-db-dependencies.ps1 -dependencies $parsedDependencies
+& $PSScriptRoot/download-db-dependencies.ps1 -dependencies $parsedDependencies
 
-& $PSScriptRoot/../dependency-scripts\run-db-dependencies.ps1 `
+& $PSScriptRoot/run-db-dependencies.ps1 `
     -dbServer "$dbServer,$dbServerPort" `
     -dbName $dbName `
     -useIntegratedSecurity:$useIntegratedSecurity `
