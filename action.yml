@@ -25,7 +25,7 @@ inputs:
     description: The password for the user logging in to the database. This is required if use-integrated-security is false, otherwise it's optional and will be ignored.
     required: false
   migration-files-path:
-    description: The path to the base directory containing the migration files to process with flyway
+    description: The path to the base directory containing the migration files to process with flyway.
     required: true
   install-mock-db-objects:
     description: Specifies whether mock db objects should be used to fill out dependencies. If set to true mock-db-object-dependency-list must also be set, otherwise an error will occur. The expected value is true or false.
@@ -42,7 +42,7 @@ inputs:
     description: The file path to the sql file that initializes the database. This script will only be run if the incremental property is false.
     required: false
   run-tests:
-    description: Specifies whether or not to run tests. The expected values are true and false. If true, test-files-path should also be set.
+    description: Specifies whether or not to run tests. The expected values are true and false. If true, test-files-path should also be set. If false, test-files-path will be ignored.
     required: false
     default: 'false'
   test-files-path:
