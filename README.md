@@ -4,30 +4,46 @@ This action uses [Flyway](https://flywaydb.org/) to spin up the specified databa
 
 ## Index
 
-- [Inputs](#inputs)
-- [Example](#example)
-- [Contributing](#contributing)
-  - [Incrementing the Version](#incrementing-the-version)
-- [Code of Conduct](#code-of-conduct)
-- [License](#license)
+- [build-database-ci-action](#build-database-ci-action)
+  - [Index](#index)
+  - [Inputs](#inputs)
+  - [Example](#example)
+  - [Contributing](#contributing)
+    - [Incrementing the Version](#incrementing-the-version)
+  - [Code of Conduct](#code-of-conduct)
+  - [License](#license)
 
 ## Inputs
-| Parameter                       | Is Required | Default | Description                                                                                                                                                                                                   |
-| ------------------------------- | ----------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `db-server-name`                | true        | N/A     | The name of the database server to build the database on.                                                                                                                                                     |
-| `db-server-port`                | false       | 1433    | The port that the database server listens on.                                                                                                                                                                 |
-| `db-name`                       | true        | N/A     | The name of the database to build.                                                                                                                                                                            |
-| `install-mock-db-objects`       | false       | false   | Specifies whether mock db objects should be used to fill out dependencies. If set to true mock-db-object-nuget-feed-url must also be set, otherwise an error will occur. The expected value is true or false. |
-| `mock-db-object-nuget-feed-url` | false       | N/A     | The url to the nuget feed containing the mock database objects. This needs to be set if the install-mock-db-objects flag is set to avoid errors.                                                              |
-| `nuget-username`                | false       | N/A     | The username for the user to authenticate with the nuget feed. This should be set if install-mock-db-objects is true.                                                                                         |
-| `nuget-password`                | false       | N/A     | The password for the user to authenticate with the nuget feed. This should be set if install-mock-db-objects is true.                                                                                         |
-| `incremental`                   | false       | false   | Specifies whether to drop and recreate the database before building, or apply to the current database. The expected value is true or false.                                                                   |
-| `run-tests`                     | false       | false   | Specifies whether or not to run tSQLt tests.                                                                                                                                                                  |
-| `drop-db-after-build`           | false       | true    | Specifies whether or not to drop the database after building. Set this to false if other steps in the job rely on the database existing.                                                                      |
-| `should-validate-migrations`    | true        | false   | Determines whether flyway will validate the migration scripts before running them.                                                                                                                            |
-| `seed-data`                     | false       | false   | A switch specifying whether or not to seed data into the database.                                                                                                                                            |
-| `db-username`                   | false       | N/A     | The username to log into the database with. If not set, then integrated security will be used.                                                                                                                |
-| `db-password`                   | false       | N/A     | The password associated with the db-username used for login.                                                                                                                                                  |
+| Parameter                        | Is Required | Default | Description                                                                                                                                                                                                                                                                                                                        |
+| -------------------------------- | ----------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `db-server-name`                 | true        | N/A     | The name of the database server to build the database on.                                                                                                                                                                                                                                                                          |
+| `db-server-port`                 | false       | 1433    | The port that the database server listens on.                                                                                                                                                                                                                                                                                      |
+| `db-name`                        | true        | N/A     | The name of the database to build.                                                                                                                                                                                                                                                                                                 |
+| `use-integrated-security`        | false       | false   | Use domain integrated security. This only works on windows. If running on a linux runner, set this to false or don't specify a value. If false, a db-username and db-password should be specified; if they aren't then the action will attempt to use integrated security. If true, those parameters will be ignored if specified. |
+| `db-username`                    | false       | N/A     | The username to log into the database with. If not set, then integrated security will be used.                                                                                                                                                                                                                                     |
+| `db-password`                    | false       | N/A     | The password associated with the db-username used for login.                                                                                                                                                                                                                                                                       |
+| `migration-files-path`           | true        | N/A     | The path to the base directory containing the migration files to process with flyway.                                                                                                                                                                                                                                              |
+| `install-mock-db-objects`        | false       | false   | Specifies whether mock db objects should be used to fill out dependencies. If set to true mock-db-object-nuget-feed-url must also be set, otherwise an error will occur. The expected value is true or false.                                                                                                                      |
+| `mock-db-object-dependency-list` | false       | N/A     | A json string containing a list of objects with the name of the dependency package, the version, and the url where the package is stored.                                                                                                                                                                                          |
+| `incremental`                    | false       | false   | Specifies whether to drop and recreate the database before building, or apply to the current database. The expected value is true or false. If true, the create-database-file property will not be used.                                                                                                                           |
+| `create-database-file`           | false       | N/A     | The file path to the sql file that initializes the database. This script will only be run if the incremental property is false.                                                                                                                                                                                                    |
+| `run-tests`                      | false       | false   | Specifies whether or not to run tests. The expected values are true and false. If true, test-files-path should also be set. If false, test-files-path will be ignored.                                                                                                                                                             |
+| `test-files-path`                | false       | N/A     | The path to the files with tSQLt tests.                                                                                                                                                                                                                                                                                            |
+| `test-timeout`                   | false       | 300     | An optional setting for the allowed wait time, in seconds, for the tests to execute. If tests sometimes hang, or shouldn't take longer than a certain amount of time, this parameter can be helpful.                                                                                                                               |
+| `drop-db-after-build`            | false       | true    | Specifies whether or not to drop the database after building. Set this to false if other steps in the job rely on the database existing.                                                                                                                                                                                           |
+| `should-validate-migrations`     | true        | false   | Determines whether flyway will validate the migration scripts before running them.                                                                                                                                                                                                                                                 |
+| `seed-data`                      | false       | false   | A switch specifying whether or not to seed data into the database.                                                                                                                                                                                                                                                                 |
+| `seed-data-files-path`           | false       | N/A     | The path to the files with seeding database.                                                                                                                                                                                                                                                                                       |
+| `managed-schemas`                | true        | dbo     | A comma separated list of schemas that are to be managed by flyway.                                                                                                                                                                                                                                                                |
+
+The `mock-db-object-dependency-list` should be a json array of objects with the following properties:
+```json
+{
+  "version": "1.0.0",
+  "packageName": "some_package",
+  "nugetUrl": "https://www.some-nuget-repo.com"
+}
+```
 
 ## Example
 
@@ -44,20 +60,28 @@ jobs:
           version: 7.2.0
 
       - name: Build Database
-        uses: im-open/build-database-ci-action@v2.0.1
+        uses: im-open/build-database-ci-action@v3.0.0
         with:
           db-server-name: localhost
+          db-server-port: 1433
           db-name: MyLocalDB
-          install-mock-db-objects: true
-          mock-db-object-nuget-feed-url: https://www.nuget.org/
-          nuget-username: NugetUsername
-          nuget-password: ${{ secrets.NugetPassword }}
-          incremental: false
-          run-tests: true
-          drop-db-after-build: false
-          should-validate-migrations: false
+          use-integrated-security: false
           db-username: sa
           db-password: ${{ secrets.DB_PASSWORD }}
+          migration-files-path: ./path/to/migrations
+          install-mock-db-objects: true
+          mock-db-object-dependency-list: '[{"version":"1.0.0","packageName":"dbo.Something","nugetUrl":"https://nuget.pkg.github.com/my-org/my-repo/dbo.Something.nupkg"},{"version":"1.2.0","packageName":"dbo.SomeOtherThing","nugetUrl":"https://nuget.pkg.github.com/my-org/my-repo/dbo.SomeOtherThing.nupkg"}]'
+          incremental: false
+          create-database-file: ./path/to/create-db.sql
+          run-tests: true
+          test-files-path: ./path/to/tsqlt/tests
+          test-timeout: 120 # 2 minutes
+          drop-db-after-build: false
+          should-validate-migrations: false
+          seed-data: true
+          seed-data-files-path: ./path/to/seed/data/files
+          managed-schemas: dbo,MyCustomSchema,AnotherSchema
+
 ```
 
 

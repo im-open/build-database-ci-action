@@ -6,78 +6,184 @@ inputs:
   db-server-name:
     description: The name of the database server to build the database on.
     required: true
+    default: 'localhost'
   db-server-port:
     description: The port that the database server listens on.
     required: false
     default: '1433'
   db-name:
-    description: The name of the database to bubild.
+    description: The name of the database to build.
+    required: true
+  use-integrated-security:
+    description: Use domain integrated security. This only works on windows. If running on a linux runner, set this to false or don't specify a value. If false, a db-username and db-password should be specified; if they aren't then the action will attempt to use integrated security. If true, those parameters will be ignored if specified.
+    required: false
+    default: 'false'
+  db-username:
+    description: The username to use to login to the database. This is required if use-integrated-security is false, otherwise it's optional and will be ignored.
+    required: false
+  db-password:
+    description: The password for the user logging in to the database. This is required if use-integrated-security is false, otherwise it's optional and will be ignored.
+    required: false
+  migration-files-path:
+    description: The path to the base directory containing the migration files to process with flyway.
     required: true
   install-mock-db-objects:
-    description: Specifies whether mock db objects should be used to fill out dependencies. If set to true mock-db-object-nuget-feed-url must also be set, otherwise an error will occur. The expected value is true or false.
+    description: Specifies whether mock db objects should be used to fill out dependencies. If set to true mock-db-object-dependency-list must also be set, otherwise an error will occur. The expected value is true or false.
     required: false
     default: 'false'
-  mock-db-object-nuget-feed-url:
-    description: The url to the nuget feed containing the mock database objects. This needs to be set if the install-mock-db-objects flag is set to avoid errors.
-    required: false
-  nuget-username:
-    description: The username for the user to authenticate with the nuget feed. This should be set if install-mock-db-objects is true.
-    required: false
-  nuget-password:
-    description: The password for the user to authenticate with the nuget feed. This should be set if install-mock-db-objects is true.
+  mock-db-object-dependency-list:
+    description: A json string containing a list of objects with the name of the dependency package, the version, and the url where the package is stored.
     required: false
   incremental:
-    description: Specifies whether to drop and recreate the database before building, or apply to the current database. The expected value is true or false.
+    description: Specifies whether to drop and recreate the database before building, or apply to the current database. The expected value is true or false. If true, the create-database-file property will not be used.
     required: false
     default: 'false'
+  create-database-file:
+    description: The file path to the sql file that initializes the database. This script will only be run if the incremental property is false.
+    required: false
   run-tests:
-    description: Specifies whether or not to run tests.
+    description: Specifies whether or not to run tests. The expected values are true and false. If true, test-files-path should also be set. If false, test-files-path will be ignored.
     required: false
     default: 'false'
-  drop-db-after-build:
-    description: Specifies whether or not to drop the database after building. Set this to false if other steps in the job rely on the database existing.
+  test-files-path:
+    description: The path to the files with tSQLt tests.
     required: false
-    default: 'true'
+  test-timeout:
+    description: An optional setting for the allowed wait time, in seconds, for the tests to execute. If tests sometimes hang, or shouldn't take longer than a certain amount of time, this parameter can be helpful.
+    required: false
+    default: '300'
+  drop-db-after-build:
+    description: Specifies whether or not to drop the database after building. The expected values are true and false. Set this to false if other steps in the job rely on the database existing.
+    required: false
+    default: 'false'
   should-validate-migrations:
     description: Determines whether flyway will validate the migration scripts before running them.
     required: true
     default: 'false'
   seed-data:
-    description: A switch specifying whether or not to seed data into the database.
+    description: A switch specifying whether or not to seed data into the database. The expected values are true and false. If true, seed-data-files-path must also be set.
     required: false
     default: 'false'
-  db-username:
-    description: The username to log into the database with. If not set, then integrated security will be used.
+  seed-data-files-path:
+    description: The path to the files with seeding database.
     required: false
-  db-password:
-    description: The password associated with the db-username used for login.
-    required: false
+  managed-schemas:
+    description: A comma separated list of schemas that are to be managed by flyway.
+    required: true
+    default: 'dbo'
 
 runs:
   using: 'composite'
   steps:
-    - name: Install Database Dependencies
-      shell: pwsh
-      run: ${{ github.action_path }}/scripts/installpowershelldependencies.ps1
-
-    - name: Build Database
+    - name: Set integrated security flag
+      id: set-auth-method
       shell: pwsh
       run: |
-        $secureNugetPassword = if(!!"${{ inputs.nuget-password }}") { ConvertTo-SecureString "${{ inputs.nuget-password }}" -AsPlainText -Force } else { $null }
-        $secureDbPassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
+        $useIntegratedSecurity = "${{ inputs.use-integrated-security }}"
 
-        ${{ github.action_path }}/scripts/build-flyway.ps1 `
-        -dbServerName "${{ inputs.db-server-name }}" `
-        -dbServerPort "${{ inputs.db-server-port }}" `
-        -dbName "${{ inputs.db-name }}" `
-        -installMockDbObjects:$${{ inputs.install-mock-db-objects }} `
-        -mockDbObjectNugetFeedUrl "${{ inputs.mock-db-object-nuget-feed-url }}" `
-        -nugetUser "${{ inputs.nuget-username }}" `
-        -nugetPassword $secureNugetPassword `
-        -incremental:$${{ inputs.incremental }} `
-        -runTests:$${{ inputs.run-tests }} `
-        -dropDbAfterBuild:$${{ inputs.drop-db-after-build }} `
-        -validateMigrations:$${{ inputs.should-validate-migrations }} `
-        -seedData:$${{ inputs.seed-data }} `
-        -dbUsername "${{ inputs.db-username }}" `
-        -dbPassword $secureDbPassword
+        if ((!$useIntegratedSecurity -or $useIntegratedSecurity.ToLower() -eq "false") -and !"${{ inputs.db-username }}" -and !"${{ inputs.db-password }}") {
+          $useIntegratedSecurity = "true"
+        }
+
+        echo "::set-output name=use_integrated_security::$useIntegratedSecurity"
+
+    - name: Install SQL Powershell Module
+      shell: pwsh
+      run: |
+        if (get-module SqlServer -ListAvailable) {
+          Write-Output "Importing SqlServer module"
+          Import-Module SqlServer
+        }
+        else {
+          Write-Output "Installing SqlServer module"
+          $repo = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
+          if (!$repo) {
+            Write-Output "Registering PSGallery as as PSRepository"
+            Register-PSRepository -Name "PSGallery" -SourceLocation "https://www.powershellgallery.com/api/v2/" -InstallationPolicy Trusted
+          }
+          PowerShellGet\Install-Module SqlServer -Repository PSGallery -Force -AllowClobber
+          Import-Module SqlServer
+        }
+
+    - name: Create Database
+      shell: pwsh
+      run: |
+        Write-Output "Creating the database"
+        [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
+
+        ${{ github.action_path }}/src/create-db/create-db.ps1 `
+          -dbServer "${{ inputs.db-server-name }}" `
+          -dbServerPort "${{ inputs.db-server-port }}" `
+          -dbName "master" `
+          -incremental:$${{ inputs.incremental }} `
+          -pathToCreateDbFile "${{ inputs.create-database-file }}" `
+          -installMockDbObjects:$${{ inputs.install-mock-db-objects }} `
+          -mockDependencyObjectList "${{ inputs.mock-db-object-dependency-list }}" `
+          -useIntegratedSecurity:$${{ steps.set-auth-method.outputs.use_integrated_security }} `
+          -username "${{ inputs.db-username }}" `
+          -password $securePassword
+
+    - name: Run migration scripts
+      shell: pwsh
+      run: |
+        Write-Output "Running migration scripts"
+
+        [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
+        $baselineVersion = 0
+
+        if ('${{ inputs.incremental }}' -eq 'true')
+        {
+          $baselineVersion = 0.1 # this will allow us to ignore missing migrations when running flyway
+        }
+
+        ${{ github.action_path }}/src/run-flyway/run-flyway-migrate.ps1 `
+          -dbServer "${{ inputs.db-server-name }}" `
+          -dbServerPort "${{ inputs.db-server-port }}" `
+          -dbName "${{ inputs.db-name }}" `
+          -pathToMigrationFiles "${{ inputs.migration-files-path }}" `
+          -migrationHistoryTable "MigrationHistory" `
+          -baselineVersion $baselineVersion `
+          -managedSchemas "${{ inputs.managed-schemas }}" `
+          -validateMigrations:$${{ inputs.should-validate-migrations }} `
+          -useIntegratedSecurity:$${{ steps.set-auth-method.outputs.use_integrated_security }} `
+          -username "${{ inputs.db-username }}" `
+          -password $securePassword
+
+    - name: Run tests
+      if: ${{ inputs.run-tests == 'true' }}
+      shell: pwsh
+      run: |
+        Write-Output "Running Tests"
+
+        [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
+
+        ${{ github.action_path }}/src/tsqlt/run-tests.ps1 `
+          -dbServer "${{ inputs.db-server-name }}" `
+          -dbServerPort "${{ inputs.db-server-port }}" `
+          -dbName "${{ inputs.db-name }}" `
+          -pathToTests "${{ inputs.test-files-path }}" `
+          -managedSchemas "${{ inputs.managed-schemas }}" `
+          -queryTimeout "${{ inputs.test-timeout }}" `
+          -useIntegratedSecurity:$${{ steps.set-auth-method.outputs.use_integrated_security }} `
+          -username "${{ inputs.db-username }}" `
+          -password $securePassword
+
+    - name: Run seed data scripts
+      if: ${{ inputs.seed-data == 'true' }}
+      shell: pwsh
+      run: |
+        Write-Output "Seeding data into the database"
+
+        [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
+
+        ${{ github.action_path }}/src/run-flyway/run-flyway-migrate.ps1 `
+          -dbServer "${{ inputs.db-server-name }}" `
+          -dbServerPort "${{ inputs.db-server-port }}" `
+          -dbName "${{ inputs.db-name }}" `
+          -pathToMigrationFiles "${{ inputs.seed-data-files-path }}" `
+          -migrationHistoryTable "SeedDataHistory" `
+          -managedSchemas "${{ inputs.managed-schemas }}" `
+          -validateMigrations `
+          -useIntegratedSecurity:$${{ steps.set-auth-method.outputs.use_integrated_security }} `
+          -username "${{ inputs.db-username }}" `
+          -password $securePassword
