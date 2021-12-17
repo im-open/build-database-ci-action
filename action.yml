@@ -15,13 +15,12 @@ inputs:
     description: The name of the database to build.
     required: true
   use-integrated-security:
-    description: Use domain integrated security. This only works on windows. If running on a linux runner, set this to false or don't specify a value. If false, a db-username and db-password should be specified. If true, those parameters will be ignored if specified.
-    required: true
+    description: Use domain integrated security. This only works on windows. If running on a linux runner, set this to false or don't specify a value. If false, a db-username and db-password should be specified; if they aren't then the action will attempt to use integrated security. If true, those parameters will be ignored if specified.
+    required: false
     default: 'false'
   db-username:
-    description: The username to use to login to the database. This is required if use-integrated-security is false, otherwise it's optional and will be ignored. The default value (sa) references the default system administrator account for SQL Server.
+    description: The username to use to login to the database. This is required if use-integrated-security is false, otherwise it's optional and will be ignored.
     required: false
-    default: 'sa'
   db-password:
     description: The password for the user logging in to the database. This is required if use-integrated-security is false, otherwise it's optional and will be ignored.
     required: false
@@ -76,6 +75,18 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Set integrated security flag
+      id: set-auth-method
+      shell: pwsh
+      run: |
+        $useIntegratedSecurity = "${{ inputs.use-integrated-security }}"
+
+        if ((!$useIntegratedSecurity -or $useIntegratedSecurity.ToLower() -eq "false") -and !"${{ inputs.db-username }}" -and !"${{ inputs.db-password }}") {
+          $useIntegratedSecurity = "true"
+        }
+
+        echo "::set-output name=use_integrated_security::$useIntegratedSecurity"
+
     - name: Install SQL Powershell Module
       shell: pwsh
       run: |
@@ -108,7 +119,7 @@ runs:
           -pathToCreateDbFile "${{ inputs.create-database-file }}" `
           -installMockDbObjects:$${{ inputs.install-mock-db-objects }} `
           -mockDependencyObjectList "${{ inputs.mock-db-object-dependency-list }}" `
-          -useIntegratedSecurity:$${{ inputs.use-integrated-security }} `
+          -useIntegratedSecurity:$${{ steps.set-auth-method.outputs.use_integrated_security }} `
           -username "${{ inputs.db-username }}" `
           -password $securePassword
 
@@ -134,7 +145,7 @@ runs:
           -baselineVersion $baselineVersion `
           -managedSchemas "${{ inputs.managed-schemas }}" `
           -validateMigrations:$${{ inputs.should-validate-migrations }} `
-          -useIntegratedSecurity:$${{ inputs.use-integrated-security }} `
+          -useIntegratedSecurity:$${{ steps.set-auth-method.outputs.use_integrated_security }} `
           -username "${{ inputs.db-username }}" `
           -password $securePassword
 
@@ -153,7 +164,7 @@ runs:
           -pathToTests "${{ inputs.test-files-path }}" `
           -managedSchemas "${{ inputs.managed-schemas }}" `
           -queryTimeout "${{ inputs.test-timeout }}" `
-          -useIntegratedSecurity:$${{ inputs.use-integrated-security }} `
+          -useIntegratedSecurity:$${{ steps.set-auth-method.outputs.use_integrated_security }} `
           -username "${{ inputs.db-username }}" `
           -password $securePassword
 
@@ -173,6 +184,6 @@ runs:
           -migrationHistoryTable "SeedDataHistory" `
           -managedSchemas "${{ inputs.managed-schemas }}" `
           -validateMigrations `
-          -useIntegratedSecurity:$${{ inputs.use-integrated-security }} `
+          -useIntegratedSecurity:$${{ steps.set-auth-method.outputs.use_integrated_security }} `
           -username "${{ inputs.db-username }}" `
           -password $securePassword
