@@ -30,7 +30,7 @@ Write-Output "Toggling off schema binding for tests"
 
 $fakeTablePattern = "tSQLt.FakeTable\s+(@TableName\s*=\s*)?N?'([^']+)'"
 $objectNames = (
-    Get-ChildItem ./src/TempTests/*.sql -File -Recurse |
+    Get-ChildItem $pathToTests/*.sql -File -Recurse |
     Where-Object { $_.Name.StartsWith("R__") } |
     ForEach-Object {
         Get-Content -Raw $_.FullName |
