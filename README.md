@@ -30,7 +30,7 @@ This action uses [Flyway](https://flywaydb.org/) to spin up the specified databa
 | `run-tests`                      | false       | false   | Specifies whether or not to run tests. The expected values are true and false. If true, test-files-path should also be set. If false, test-files-path will be ignored.                                                                                                                                                             |
 | `test-files-path`                | false       | N/A     | The path to the files with tSQLt tests.                                                                                                                                                                                                                                                                                            |
 | `test-timeout`                   | false       | 300     | An optional setting for the allowed wait time, in seconds, for the tests to execute. If tests sometimes hang, or shouldn't take longer than a certain amount of time, this parameter can be helpful.                                                                                                                               |
-| `drop-db-after-build`            | false       | true    | Specifies whether or not to drop the database after building. Set this to false if other steps in the job rely on the database existing.                                                                                                                                                                                           |
+| `drop-db-after-build`            | false       | false   | Specifies whether or not to drop the database after building. Set this to false if other steps in the job rely on the database existing.                                                                                                                                                                                           |
 | `should-validate-migrations`     | true        | false   | Determines whether flyway will validate the migration scripts before running them.                                                                                                                                                                                                                                                 |
 | `seed-data`                      | false       | false   | A switch specifying whether or not to seed data into the database.                                                                                                                                                                                                                                                                 |
 | `seed-data-files-path`           | false       | N/A     | The path to the files with seeding database.                                                                                                                                                                                                                                                                                       |
@@ -55,12 +55,12 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install Flyway
-        uses: im-open/setup-flyway@v1.0.1
+        uses: im-open/setup-flyway@v1.0.2
         with:
           version: 7.2.0
 
       - name: Build Database
-        uses: im-open/build-database-ci-action@v3.0.0
+        uses: im-open/build-database-ci-action@v3.0.1
         with:
           db-server-name: localhost
           db-server-port: 1433
