@@ -47,6 +47,7 @@ Write-Output $objectNames
 $removeSchemaBindingSql = $null
 $restoreSchemaBindingSql = $null
 $authSqlCmdParams = ''
+$plainPassword = ''
 
 if (-Not $useIntegratedSecurity) {
     $cred = New-Object System.Management.Automation.PSCredential -ArgumentList $username, $password
@@ -122,7 +123,12 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
 }
 
 if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
-    Invoke-Expression -Command "Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" -Query `"$removeSchemaBindingSql`" -QueryTimeout 120 $authSqlCmdParams"
+    if (-Not $useIntegratedSecurity) {
+        Invoke-Sqlcmd -ServerInstance "$dbServer, $dbServerPort" -Database "$dbName" -Query "$removeSchemaBindingSql" -QueryTimeout 120 -Username "$username" -Password "$plainPassword"
+    }
+    else {
+        Invoke-Sqlcmd -ServerInstance "$dbServer, $dbServerPort" -Database "$dbName" -Query "$removeSchemaBindingSql" -QueryTimeout 120
+    }
 }
 
 Write-Output "Running tSQLt tests"
@@ -141,5 +147,10 @@ Write-Output "Running tSQLt tests"
 Write-Output "Toggling on schema binding"
 
 if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
-    Invoke-Expression -Command "Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" -Query `"$restoreSchemaBindingSql`" -QueryTimeout 120 $authSqlCmdParams"
+    if (-Not $useIntegratedSecurity) {
+        Invoke-Sqlcmd -ServerInstance "$dbServer,$dbServerPort" -Database "$dbName" -Query "$restoreSchemaBindingSql" -QueryTimeout 120 -Username "$username" -Password "$plainPassword"
+    }
+    else {
+        Invoke-Sqlcmd -ServerInstance "$dbServer,$dbServerPort" -Database "$dbName" -Query "$restoreSchemaBindingSql" -QueryTimeout 120
+    }
 }
