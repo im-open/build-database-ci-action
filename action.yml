@@ -114,7 +114,7 @@ runs:
         ${{ github.action_path }}/src/create-db/create-db.ps1 `
           -dbServer "${{ inputs.db-server-name }}" `
           -dbServerPort "${{ inputs.db-server-port }}" `
-          -dbName "master" `
+          -dbName "${{ inputs.db-name }}" `
           -incremental:$${{ inputs.incremental }} `
           -pathToCreateDbFile "${{ inputs.create-database-file }}" `
           -installMockDbObjects:$${{ inputs.install-mock-db-objects }} `
