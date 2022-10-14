@@ -1,6 +1,6 @@
 # build-database-ci-action
 
-This action uses [Flyway](https://flywaydb.org/) to spin up the specified database, run your migration scripts against it, and run your [tSQLt](https://tsqlt.org/) tests. 
+This action uses [Flyway](https://flywaydb.org/) to spin up the specified database, run your migration scripts against it, and run your [tSQLt](https://tsqlt.org/) tests.
 
 ## Index
 
@@ -14,6 +14,7 @@ This action uses [Flyway](https://flywaydb.org/) to spin up the specified databa
   - [License](#license)
 
 ## Inputs
+
 | Parameter                        | Is Required | Default | Description                                                                                                                                                                                                                                                                                                                        |
 | -------------------------------- | ----------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `db-server-name`                 | true        | N/A     | The name of the database server to build the database on.                                                                                                                                                                                                                                                                          |
@@ -37,6 +38,7 @@ This action uses [Flyway](https://flywaydb.org/) to spin up the specified databa
 | `managed-schemas`                | true        | dbo     | A comma separated list of schemas that are to be managed by flyway.                                                                                                                                                                                                                                                                |
 
 The `mock-db-object-dependency-list` should be a json array of objects with the following properties:
+
 ```json
 {
   "version": "1.0.0",
@@ -52,10 +54,10 @@ jobs:
   build-database:
     runs-on: [self-hosted, ubuntu-20.04]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install Flyway
-        uses: im-open/setup-flyway@v1.0.2
+        uses: im-open/setup-flyway@v1.1.0
         with:
           version: 7.2.0
 
@@ -81,27 +83,26 @@ jobs:
           seed-data: true
           seed-data-files-path: ./path/to/seed/data/files
           managed-schemas: dbo,MyCustomSchema,AnotherSchema
-
 ```
-
 
 ## Contributing
 
 When creating new PRs please ensure:
+
 1. For major or minor changes, at least one of the commit messages contains the appropriate `+semver:` keywords listed under [Incrementing the Version](#incrementing-the-version).
-2. The `README.md` example has been updated with the new version.  See [Incrementing the Version](#incrementing-the-version).
+2. The `README.md` example has been updated with the new version. See [Incrementing the Version](#incrementing-the-version).
 3. The action code does not contain sensitive information.
 
 ### Incrementing the Version
 
-This action uses [git-version-lite] to examine commit messages to determine whether to perform a major, minor or patch increment on merge.  The following table provides the fragment that should be included in a commit message to active different increment strategies.
-| Increment Type | Commit Message Fragment                     |
+This action uses [git-version-lite] to examine commit messages to determine whether to perform a major, minor or patch increment on merge. The following table provides the fragment that should be included in a commit message to active different increment strategies.
+| Increment Type | Commit Message Fragment |
 | -------------- | ------------------------------------------- |
-| major          | +semver:breaking                            |
-| major          | +semver:major                               |
-| minor          | +semver:feature                             |
-| minor          | +semver:minor                               |
-| patch          | *default increment type, no comment needed* |
+| major | +semver:breaking |
+| major | +semver:major |
+| minor | +semver:feature |
+| minor | +semver:minor |
+| patch | _default increment type, no comment needed_ |
 
 ## Code of Conduct
 
