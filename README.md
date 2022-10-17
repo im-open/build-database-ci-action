@@ -62,7 +62,7 @@ jobs:
           version: 7.2.0
 
       - name: Build Database
-        uses: im-open/build-database-ci-action@v3.0.5
+        uses: im-open/build-database-ci-action@v3.1.0
         with:
           db-server-name: localhost
           db-server-port: 1433
