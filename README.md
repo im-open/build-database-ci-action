@@ -7,7 +7,7 @@ This action uses [Flyway](https://flywaydb.org/) to spin up the specified databa
 - [build-database-ci-action](#build-database-ci-action)
   - [Index](#index)
   - [Inputs](#inputs)
-  - [Example](#example)
+  - [Examples](#examples)
   - [Contributing](#contributing)
     - [Incrementing the Version](#incrementing-the-version)
   - [Code of Conduct](#code-of-conduct)
@@ -47,7 +47,7 @@ The `mock-db-object-dependency-list` should be a json array of objects with the 
 }
 ```
 
-## Example
+## Examples
 
 ```yml
 jobs:
@@ -62,7 +62,7 @@ jobs:
           version: 7.2.0
 
       - name: Build Database
-        uses: im-open/build-database-ci-action@v3.0.3
+        uses: im-open/build-database-ci-action@v3.0.5
         with:
           db-server-name: localhost
           db-server-port: 1433
@@ -83,6 +83,29 @@ jobs:
           seed-data: true
           seed-data-files-path: ./path/to/seed/data/files
           managed-schemas: dbo,MyCustomSchema,AnotherSchema
+```
+
+If your migration script are spread over multiple directories, and there isn't a common parent directory that can be used, multiple migration directories can be specified:
+
+```yml
+jobs:
+  build-database:
+    runs-on: [self-hosted, ubuntu-20.04]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Flyway
+        uses: im-open/setup-flyway@v1.1.0
+        with:
+          version: 7.2.0
+
+      - name: Build Database
+        uses: im-open/build-database-ci-action@v3.0.5
+        with:
+          db-server-name: localhost
+          db-server-port: 1433
+          db-name: MyLocalDB
+          migration-files-path: ./path/to/migrations,./another/path
 ```
 
 ## Contributing
