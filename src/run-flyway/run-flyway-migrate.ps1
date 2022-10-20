@@ -18,7 +18,12 @@ $ErrorActionPreference = "Stop";
 
 Write-Information -InformationAction Continue -MessageData "Running migrate..."   
 
-$flywayLocations = "filesystem:`"$(Resolve-Path $pathToMigrationFiles)`""
+[System.Collections.ArrayList]$resolvedPaths
+$pathToMigrationFiles.Split(",") | ForEach-Object {
+    $resolvedPaths += ("filesystem:`"$(Resolve-Path $_)`"")
+}
+
+$flywayLocations = $resolvedPaths -Join ','
 
 try {
     $jdbcUrl = "jdbc:sqlserver://${dbServer}:$dbServerPort;databaseName=$dbName;"
