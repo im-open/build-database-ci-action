@@ -85,7 +85,7 @@ runs:
           $useIntegratedSecurity = "true"
         }
 
-        echo "::set-output name=use_integrated_security::$useIntegratedSecurity"
+        "use_integrated_security=$useIntegratedSecurity" >> $env:GITHUB_OUTPUT
 
     - name: Install SQL Powershell Module
       shell: pwsh
