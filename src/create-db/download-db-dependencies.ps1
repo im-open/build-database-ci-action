@@ -20,11 +20,13 @@ foreach ($dependency in $dependencies) {
     $version = $dependency.version
     $url = $dependency.nugetUrl
     $nugetOutput = "$dependencyOutputFolder/$packageName.nupkg"
+
+    $headers = If ($dependency.authToken) { @{ "Authorization" = "Bearer $($dependency.authToken)" } } Else { @{} };
     Write-Host "Downloading $packageName.$version"
     Remove-Item $nugetOutput -Force -Recurse -ErrorAction Ignore
 
     try {
-        Invoke-WebRequest $url -OutFile $nugetOutput
+        Invoke-WebRequest $url -OutFile $nugetOutput -Headers $headers
     }
     catch {
         Write-Error $_;
