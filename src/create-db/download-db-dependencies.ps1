@@ -35,8 +35,27 @@ foreach ($dependency in $dependencies) {
     #Extract Package
     $extractionLocation = "$dependencyOutputFolder/$packageName"
     Remove-Item $extractionLocation -Force -Recurse -ErrorAction Ignore
+    New-Item -ItemType Directory -Path $extractionLocation
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($nugetOutput, $extractionLocation)
+    # [System.IO.Compression.ZipFile]::ExtractToDirectory($nugetOutput, $extractionLocation)
+
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($nugetOutput)
+
+    foreach ($item in $zip.Entries) {
+        $itemDirectory = Join-Path -Path $extractionLocation -ChildPath (Split-Path -parent $item.FullName)
+        
+        try {
+            if ($itemDirectory -and -not (Test-Path $itemDirectory)) {
+                New-Item -ItemType Directory -Path $itemDirectory
+            }
+            [System.IO.Compression.ZipFileExtensions]::ExtractToFile($item, (Join-Path -Path $extractionLocation -ChildPath $item.FullName), $false)
+        }
+        catch {
+            # Write out any errors that happen but continue on
+            Write-Host "An Error Occurred. Writing out the information and moving on."
+            Write-Host $_
+        }
+    }
 }
 
 Write-Host "Finished downloading database objects"
