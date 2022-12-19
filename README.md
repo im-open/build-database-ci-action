@@ -25,7 +25,7 @@ This action uses [Flyway](https://flywaydb.org/) to spin up the specified databa
 | `db-password`                    | **No**: if `use-integrated-security: false`<br>**Yes**: if `use-integrated-security: true`       | N/A     | The password associated with the db-username used for login.                                                                                                                                                                                                                                                                       |
 | `migration-files-path`           | **Yes**        | N/A     | The path to the base directory containing the migration files to process with flyway. Can be a comma separated list of directories.                                                                                                                                                                                                                                              |
 | `install-mock-db-objects`        | **No**       | false   | Specifies whether mock db objects should be used to fill out dependencies. If set to true mock-db-object-nuget-feed-url must also be set, otherwise an error will occur. The expected value is true or false.                                                                                                                      |
-| `mock-db-object-dependency-list` | **No**       | N/A     | A json string containing a list of objects with the name of the dependency package, the version, and the url where the package is stored.                                                                                                                                                                                          |
+| `mock-db-object-dependency-list` | **No**       | N/A     | A json string containing a list of objects with the name of the dependency package, the version, the url where the package is stored, and optionally a bearer token for authentication.                                                                                                                                                                                          |
 | `incremental`                    | **No**       | false   | Specifies whether to drop and recreate the database before building, or apply to the current database. The expected value is true or false. If true, the create-database-file property will not be used.                                                                                                                           |
 | `create-database-file`           | **No**: if `incremental: true`<br>**Yes**: if `incremental: false`       | N/A     | The file path to the sql file that initializes the database. This script will only be run if the incremental property is false.                                                                                                                                                                                                    |
 | `run-tests`                      | **No**       | false   | Specifies whether or not to run tests. The expected values are true and false. If true, test-files-path should also be set. If false, test-files-path will be ignored.                                                                                                                                                             |
@@ -43,9 +43,12 @@ The `mock-db-object-dependency-list` should be a json array of objects with the 
 {
   "version": "1.0.0",
   "packageName": "some_package",
-  "nugetUrl": "https://www.some-nuget-repo.com"
+  "nugetUrl": "https://www.some-nuget-repo.com",
+  "authToken": "ghp_fdijlfdsakeizdkliejfezejw"
 }
 ```
+
+Note that the `authToken` property is optionally used for nuget sources that require a bearer token, such as GitHub Packages. It should not be included if it is unnecessary.
 
 ## Examples
 
@@ -62,7 +65,7 @@ jobs:
           version: 7.2.0
 
       - name: Build Database
-        uses: im-open/build-database-ci-action@v3.1.0
+        uses: im-open/build-database-ci-action@v3.2.0
         with:
           db-server-name: localhost
           db-server-port: 1433
@@ -72,7 +75,7 @@ jobs:
           db-password: ${{ secrets.DB_PASSWORD }}
           migration-files-path: ./path/to/migrations
           install-mock-db-objects: true
-          mock-db-object-dependency-list: '[{"version":"1.0.0","packageName":"dbo.Something","nugetUrl":"https://nuget.pkg.github.com/my-org/my-repo/dbo.Something.nupkg"},{"version":"1.2.0","packageName":"dbo.SomeOtherThing","nugetUrl":"https://nuget.pkg.github.com/my-org/my-repo/dbo.SomeOtherThing.nupkg"}]'
+          mock-db-object-dependency-list: '[{"version":"1.0.0","packageName":"dbo.Something","nugetUrl":"https://nuget.pkg.github.com/my-org/my-repo/dbo.Something.nupkg"},{"version":"1.2.0","packageName":"dbo.SomeOtherThing","nugetUrl":"https://nuget.pkg.github.com/my-org/my-repo/dbo.SomeOtherThing.nupkg","authToken":"ghp_dkfsjakldafl"}]'
           incremental: false
           create-database-file: ./path/to/create-db.sql
           run-tests: true
@@ -100,7 +103,7 @@ jobs:
           version: 7.2.0
 
       - name: Build Database
-        uses: im-open/build-database-ci-action@v3.0.5
+        uses: im-open/build-database-ci-action@v3.2.0
         with:
           db-server-name: localhost
           db-server-port: 1433

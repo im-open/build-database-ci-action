@@ -32,7 +32,7 @@ inputs:
     required: false
     default: 'false'
   mock-db-object-dependency-list:
-    description: A json string containing a list of objects with the name of the dependency package, the version, and the url where the package is stored.
+    description: A json string containing a list of objects with the name of the dependency package, the version, the url where the package is stored, and optionally a bearer token for authentication.
     required: false
   incremental:
     description: Specifies whether to drop and recreate the database before building, or apply to the current database. The expected value is true or false. If true, the create-database-file property will not be used.
