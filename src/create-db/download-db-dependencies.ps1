@@ -37,7 +37,6 @@ foreach ($dependency in $dependencies) {
     Remove-Item $extractionLocation -Force -Recurse -ErrorAction Ignore
     New-Item -ItemType Directory -Path $extractionLocation
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    # [System.IO.Compression.ZipFile]::ExtractToDirectory($nugetOutput, $extractionLocation)
 
     $zip = [System.IO.Compression.ZipFile]::OpenRead($nugetOutput)
 
@@ -52,7 +51,7 @@ foreach ($dependency in $dependencies) {
         }
         catch {
             # Write out any errors that happen but continue on
-            Write-Host "An Error Occurred. Writing out the information and moving on."
+            Write-Host "An error occurred. Writing out the information and moving on."
             Write-Host $_
         }
     }
