@@ -60,12 +60,13 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install Flyway
-        uses: im-open/setup-flyway@v1.1.0
+        uses: im-open/setup-flyway@v1
         with:
           version: 7.2.0
 
       - name: Build Database
-        uses: im-open/build-database-ci-action@v3.2.0
+        # You may also reference the major or major.minor version
+        uses: im-open/build-database-ci-action@v3.2.1
         with:
           db-server-name: localhost
           db-server-port: 1433
@@ -98,12 +99,13 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install Flyway
-        uses: im-open/setup-flyway@v1.1.0
+        uses: im-open/setup-flyway@v1
         with:
           version: 7.2.0
 
       - name: Build Database
-        uses: im-open/build-database-ci-action@v3.2.0
+        # You may also reference the major or major.minor version
+        uses: im-open/build-database-ci-action@v3.2.1
         with:
           db-server-name: localhost
           db-server-port: 1433
