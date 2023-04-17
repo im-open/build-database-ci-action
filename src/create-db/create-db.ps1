@@ -6,6 +6,7 @@ param (
     [string]$mockDependencyObjectList,
     [switch]$incremental = $false,
     [switch]$useIntegratedSecurity = $false,
+    [switch]$trustServerCertificate = $false,
     [switch]$installMockDbObjects = $false,
     [string]$username,
     [securestring]$password
@@ -18,8 +19,9 @@ if (-Not $incremental) {
         -dbServer "$dbServer,$dbServerPort" `
         -dbName "master" `
         -pathToFile $pathToCreateDbFile `
-        -sqlCmdVariables "DatabaseName = $dbName" `
+        -sqlCmdVariables "DatabaseName=$dbName" `
         -useIntegratedSecurity:$useIntegratedSecurity `
+        -trustServerCertificate:$trustServerCertificate `
         -username $username `
         -password $password
 }
@@ -38,5 +40,6 @@ $parsedDependencies = ConvertFrom-Json $mockDependencyObjectList
     -dbServer "$dbServer,$dbServerPort" `
     -dbName $dbName `
     -useIntegratedSecurity:$useIntegratedSecurity `
+    -trustServerCertificate:$trustServerCertificate `
     -username $username `
     -password $password

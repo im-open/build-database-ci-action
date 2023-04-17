@@ -6,6 +6,7 @@ param (
     [string]$managedSchemas,
     [string]$testTimeout,
     [switch]$useIntegratedSecurity = $false,
+    [switch]$trustServerCertificate = $false,
     [string]$username,
     [SecureString]$password
 )
@@ -22,6 +23,7 @@ Write-Output "Setting up tests"
     -migrationHistoryTable TestingHistory `
     -managedSchemas $managedSchemas `
     -useIntegratedSecurity:$useIntegratedSecurity `
+    -trustServerCertificate:$trustServerCertificate `
     -username $username `
     -password $password
 
@@ -123,12 +125,21 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
 }
 
 if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
+    $sqlCmdParams = @(
+        "-ServerInstance `"$dbServer, $dbServerPort`""
+        "-Database `"$dbName`""
+        "-Query `"$removeSchemaBindingSql`""
+        "-QueryTimeout 120"
+    )
     if (-Not $useIntegratedSecurity) {
-        Invoke-Sqlcmd -ServerInstance "$dbServer, $dbServerPort" -Database "$dbName" -Query "$removeSchemaBindingSql" -QueryTimeout 120 -Username "$username" -Password "$plainPassword"
+        $sqlCmdParams += "-Username `"$username`" -Password `"$plainPassword`""
     }
-    else {
-        Invoke-Sqlcmd -ServerInstance "$dbServer, $dbServerPort" -Database "$dbName" -Query "$removeSchemaBindingSql" -QueryTimeout 120
+    if ($trustServerCertificate) {
+        $sqlCmdParams += "-TrustServerCertificate"
     }
+    
+    $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
+    Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
 
 Write-Output "Running tSQLt tests"
@@ -139,6 +150,7 @@ Write-Output "Running tSQLt tests"
     -dbName $dbName `
     -queryTimeout $testTimeout `
     -useIntegratedSecurity:$useIntegratedSecurity `
+    -trustServerCertificate:$trustServerCertificate `
     -username $username `
     -password $password
 
@@ -147,10 +159,19 @@ Write-Output "Running tSQLt tests"
 Write-Output "Toggling on schema binding"
 
 if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
+    $sqlCmdParams = @(
+        "-ServerInstance `"$dbServer, $dbServerPort`""
+        "-Database `"$dbName`""
+        "-Query `"$restoreSchemaBindingSql`""
+        "-QueryTimeout 120"
+    )
     if (-Not $useIntegratedSecurity) {
-        Invoke-Sqlcmd -ServerInstance "$dbServer,$dbServerPort" -Database "$dbName" -Query "$restoreSchemaBindingSql" -QueryTimeout 120 -Username "$username" -Password "$plainPassword"
+        $sqlCmdParams += "-Username `"$username`" -Password `"$plainPassword`""
     }
-    else {
-        Invoke-Sqlcmd -ServerInstance "$dbServer,$dbServerPort" -Database "$dbName" -Query "$restoreSchemaBindingSql" -QueryTimeout 120
+    if ($trustServerCertificate) {
+        $sqlCmdParams += "-TrustServerCertificate"
     }
+    
+    $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
+    Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }

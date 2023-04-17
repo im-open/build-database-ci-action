@@ -21,6 +21,7 @@ This action uses [Flyway](https://flywaydb.org/) to spin up the specified databa
 | `db-server-port`                 | **No**       | 1433    | The port that the database server listens on.                                                                                                                                                                                                                                                                                      |
 | `db-name`                        | **Yes**        | N/A     | The name of the database to build.                                                                                                                                                                                                                                                                                                 |
 | `use-integrated-security`        | **No**       | false   | Use domain integrated security. This only works on windows. If running on a linux runner, set this to false or don't specify a value. If false, a db-username and db-password should be specified; if they aren't then the action will attempt to use integrated security. If true, those parameters will be ignored if specified. |
+| `trust-server-certficate`        | **No**       | false   | Trust Server Certificate parameter will be added to sqlcmd connections strings.  Set to true when certificate for server is self signed. |
 | `db-username`                    | **No**: if `use-integrated-security: false`<br>**Yes**: if `use-integrated-security: true`       | N/A     | The username to log into the database with. If not set, then integrated security will be used.                                                                                                                                                                                                                                     |
 | `db-password`                    | **No**: if `use-integrated-security: false`<br>**Yes**: if `use-integrated-security: true`       | N/A     | The password associated with the db-username used for login.                                                                                                                                                                                                                                                                       |
 | `migration-files-path`           | **Yes**        | N/A     | The path to the base directory containing the migration files to process with flyway. Can be a comma separated list of directories.                                                                                                                                                                                                                                              |
@@ -66,12 +67,13 @@ jobs:
 
       - name: Build Database
         # You may also reference the major or major.minor version
-        uses: im-open/build-database-ci-action@v3.2.1
+        uses: im-open/build-database-ci-action@v3.2.2
         with:
           db-server-name: localhost
           db-server-port: 1433
           db-name: MyLocalDB
           use-integrated-security: false
+          trust-server-certficate: false
           db-username: sa
           db-password: ${{ secrets.DB_PASSWORD }}
           migration-files-path: ./path/to/migrations
@@ -105,7 +107,7 @@ jobs:
 
       - name: Build Database
         # You may also reference the major or major.minor version
-        uses: im-open/build-database-ci-action@v3.2.1
+        uses: im-open/build-database-ci-action@v3.2.2
         with:
           db-server-name: localhost
           db-server-port: 1433
