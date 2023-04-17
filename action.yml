@@ -18,6 +18,10 @@ inputs:
     description: Use domain integrated security. This only works on windows. If running on a linux runner, set this to false or don't specify a value. If false, a db-username and db-password should be specified; if they aren't then the action will attempt to use integrated security. If true, those parameters will be ignored if specified.
     required: false
     default: 'false'
+  trust-server-certficate:
+    description: Trust Server certificate if it is self signed
+    required: false
+    default: 'false'
   db-username:
     description: The username to use to login to the database. This is required if use-integrated-security is false, otherwise it's optional and will be ignored.
     required: false
@@ -87,6 +91,13 @@ runs:
 
         "use_integrated_security=$useIntegratedSecurity" >> $env:GITHUB_OUTPUT
 
+    - name: Set trust-server-certficate flag
+      id: trust-server-certficate
+      shell: pwsh
+      run: |
+        $trustServerCertificate = "${{ inputs.trust-server-certficate }}"
+        "trust_server_certificate=$trustServerCertificate" >> $env:GITHUB_OUTPUT
+
     - name: Install SQL Powershell Module
       shell: pwsh
       run: |
@@ -120,6 +131,7 @@ runs:
           -installMockDbObjects:$${{ inputs.install-mock-db-objects }} `
           -mockDependencyObjectList "${{ inputs.mock-db-object-dependency-list }}" `
           -useIntegratedSecurity:$${{ steps.set-auth-method.outputs.use_integrated_security }} `
+          -trustServerCertificate:$${{ steps.trust-server-certficate.outputs.trust_server_certificate }} `
           -username "${{ inputs.db-username }}" `
           -password $securePassword
 
@@ -146,6 +158,7 @@ runs:
           -managedSchemas "${{ inputs.managed-schemas }}" `
           -validateMigrations:$${{ inputs.should-validate-migrations }} `
           -useIntegratedSecurity:$${{ steps.set-auth-method.outputs.use_integrated_security }} `
+          -trustServerCertificate:$${{ steps.trust-server-certficate.outputs.trust_server_certificate }} `
           -username "${{ inputs.db-username }}" `
           -password $securePassword
 
@@ -165,6 +178,7 @@ runs:
           -managedSchemas "${{ inputs.managed-schemas }}" `
           -queryTimeout "${{ inputs.test-timeout }}" `
           -useIntegratedSecurity:$${{ steps.set-auth-method.outputs.use_integrated_security }} `
+          -trustServerCertificate:$${{ steps.trust-server-certficate.outputs.trust_server_certificate }} `
           -username "${{ inputs.db-username }}" `
           -password $securePassword
 
@@ -185,5 +199,6 @@ runs:
           -managedSchemas "${{ inputs.managed-schemas }}" `
           -validateMigrations `
           -useIntegratedSecurity:$${{ steps.set-auth-method.outputs.use_integrated_security }} `
+          -trustServerCertificate:$${{ steps.trust-server-certficate.outputs.trust_server_certificate }} `
           -username "${{ inputs.db-username }}" `
           -password $securePassword

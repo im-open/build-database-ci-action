@@ -4,6 +4,7 @@ param (
     [string]$dbName,
     [string]$queryTimeout,
     [switch]$useIntegratedSecurity = $false,
+    [switch]$trustServerCertificate = $false,
     [string]$username,
     [SecureString]$password
 )
@@ -45,6 +46,10 @@ else {
     $plainPassword = $cred.GetNetworkCredential().Password
 
     $authParams = "-U `"$username`" -P `"$plainPassword`""
+}
+
+if ($trustServerCertificate) {
+    $authParams += " -C"
 }
 
 try {

@@ -2,6 +2,7 @@ param (
     [string]$dbServer,
     [string]$dbName,
     [switch]$useIntegratedSecurity = $false,
+    [switch]$trustServerCertificate = $false,
     [string]$username,
     [securestring]$password
 )
@@ -27,6 +28,10 @@ if (!$useIntegratedSecurity) {
 
     $sqlCmdParams += "-Username $username"
     $sqlCmdParams += "-Password $plainPassword"
+}
+
+if ($trustServerCertificate) {
+    $sqlCmdParams += "-TrustServerCertificate"
 }
 
 Get-ChildItem -Path $dependencyFolder -Recurse -Depth 1 -Filter *.sql | ForEach-Object {

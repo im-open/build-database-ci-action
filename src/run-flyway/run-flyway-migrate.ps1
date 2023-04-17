@@ -9,6 +9,7 @@ param (
     [string]$managedSchemas,
     [switch]$enableOutOfOrder = $false,
     [switch]$useIntegratedSecurity = $false,
+    [switch]$trustServerCertificate = $false,
     [switch]$validateMigrations = $false,
     [string]$username,
     [SecureString]$password
@@ -32,6 +33,10 @@ try {
 
     if ($useIntegratedSecurity) {
         $jdbcUrl += "integratedSecurity=true;"
+    }
+
+    if ($trustServerCertificate) {
+        $jdbcUrl += "trustServerCertificate=true;"
     }
 
     $outOfOrderValue = $enableOutOfOrder.ToString().ToLower()

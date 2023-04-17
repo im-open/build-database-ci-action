@@ -4,6 +4,7 @@ param (
     [string]$pathToFile,
     [string]$sqlCmdVariables,
     [switch]$useIntegratedSecurity = $false,
+    [switch]$trustServerCertificate = $false,
     [string]$username,
     [securestring]$password
 )
@@ -28,6 +29,10 @@ if (!$useIntegratedSecurity) {
 
     $sqlCmdParams += "-Username $username"
     $sqlCmdParams += "-Password $plainPassword"
+}
+
+if ($trustServerCertificate) {
+    $sqlCmdParams += "-TrustServerCertificate"
 }
 
 $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
