@@ -73,7 +73,7 @@ jobs:
           db-server-port: 1433
           db-name: MyLocalDB
           use-integrated-security: false
-          trust-server-certificate: false
+          trust-server-certificate: true # Required on windows vm runners to be set to true
           db-username: sa
           db-password: ${{ secrets.DB_PASSWORD }}
           migration-files-path: ./path/to/migrations
