@@ -46,6 +46,7 @@ $objectNames = (
 $objectNames = $objectNames -join ','
 Write-Output $objectNames
 
+$toggleQueryTimeout = 120
 $removeSchemaBindingSql = $null
 $restoreSchemaBindingSql = $null
 $authSqlCmdParams = ''
@@ -82,8 +83,6 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     BEGIN CATCH
         THROW;
     END CATCH;"
-
-    $toggleQueryTimeout = 120
 
     Write-Output "Getting schemabinding toggle queries"
     $sqlCmdParams = @(
@@ -144,7 +143,7 @@ if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
     $sqlCmdParams = @(
         "-ServerInstance `"$dbServer, $dbServerPort`""
         "-Database `"$dbName`""
-        "-QueryTimeout 120"
+        "-QueryTimeout $toggleQueryTimeout"
         "-Query `"$removeSchemaBindingSql`""
     )
     if (-Not $useIntegratedSecurity) {
@@ -178,7 +177,7 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
     $sqlCmdParams = @(
         "-ServerInstance `"$dbServer, $dbServerPort`""
         "-Database `"$dbName`""
-        "-QueryTimeout 120"
+        "-QueryTimeout $toggleQueryTimeout"
     )
     if (-Not $useIntegratedSecurity) {
         $sqlCmdParams += $authSqlCmdParams
