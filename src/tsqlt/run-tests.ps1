@@ -178,6 +178,7 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
         "-ServerInstance `"$dbServer, $dbServerPort`""
         "-Database `"$dbName`""
         "-QueryTimeout $toggleQueryTimeout"
+        "-Query `"$restoreSchemaBindingSql`""
     )
     if (-Not $useIntegratedSecurity) {
         $sqlCmdParams += $authSqlCmdParams
@@ -185,8 +186,8 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
     if ($trustServerCertificate) {
         $sqlCmdParams += "-TrustServerCertificate"
     }
-    $sqlCmdParams += "-Query `"$restoreSchemaBindingSql`""
     
     $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
+    Write-Output "Testing SQL Command: $paramsAsAString"
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
