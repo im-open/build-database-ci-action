@@ -154,6 +154,7 @@ if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
     }
     
     $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
+    Write-Output "SQL Command to run: $paramsAsAString"
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
 
@@ -188,6 +189,6 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
     }
     
     $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
-    Write-Output "Testing SQL Command: $paramsAsAString"
+    Write-Output "SQL Command to run: $paramsAsAString"
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
