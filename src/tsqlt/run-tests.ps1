@@ -86,7 +86,23 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     $toggleQueryTimeout = 120
 
     Write-Output "Getting schemabinding toggle queries"
-    $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" -Query `"$getToggleQuery`" -QueryTimeout $toggleQueryTimeout -MaxCharLength 150000 $authSqlCmdParams"
+    $sqlCmdParams = @(
+        "-ServerInstance `"$dbServer, $dbServerPort`""
+        "-Database `"$dbName`""
+        "-Query `"$getToggleQuery`""
+        "-QueryTimeout $toggleQueryTimeout"
+        "-MaxCharLength 150000"
+    )
+    if (-Not $useIntegratedSecurity) {
+        $sqlCmdParams += $authSqlCmdParams
+    }
+    if ($trustServerCertificate) {
+        $sqlCmdParams += "-TrustServerCertificate"
+    }
+    
+    $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
+    
+    $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd $sqlCmdParams"
     Write-Output "Setting removeSchemaBindingSql"
     $removeSchemaBindingSql = "
         $setStatements
@@ -132,7 +148,7 @@ if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
         "-QueryTimeout 120"
     )
     if (-Not $useIntegratedSecurity) {
-        $sqlCmdParams += "-Username `"$username`" -Password `"$plainPassword`""
+        $sqlCmdParams += $authSqlCmdParams
     }
     if ($trustServerCertificate) {
         $sqlCmdParams += "-TrustServerCertificate"
@@ -166,7 +182,7 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
         "-QueryTimeout 120"
     )
     if (-Not $useIntegratedSecurity) {
-        $sqlCmdParams += "-Username `"$username`" -Password `"$plainPassword`""
+        $sqlCmdParams += $authSqlCmdParams
     }
     if ($trustServerCertificate) {
         $sqlCmdParams += "-TrustServerCertificate"
