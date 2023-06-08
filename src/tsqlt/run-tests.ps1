@@ -107,7 +107,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
         $setStatements
         BEGIN TRY
             BEGIN TRANSACTION;
-            " + $toggleschemabinding.unbindSql, + "
+            " + $toggleschemabinding.unbindSql + "
             COMMIT TRANSACTION;
         END TRY
         BEGIN CATCH
