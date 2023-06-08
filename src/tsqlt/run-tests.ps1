@@ -85,23 +85,11 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     END CATCH;"
 
     Write-Output "Getting schemabinding toggle queries"
-    $sqlCmdParams = @(
-        "-ServerInstance `"$dbServer, $dbServerPort`""
-        "-Database `"$dbName`""
-        "-Query `"$getToggleQuery`""
-        "-QueryTimeout $toggleQueryTimeout"
-        "-MaxCharLength 150000"
-    )
-    if (-Not $useIntegratedSecurity) {
-        $sqlCmdParams += $authSqlCmdParams
-    }
+    $trustServerCertificateFlag = ""
     if ($trustServerCertificate) {
-        $sqlCmdParams += "-TrustServerCertificate"
+        $trustServerCertificateFlag += " -TrustServerCertificate"
     }
-    
-    $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
-    
-    $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd $sqlCmdParams"
+    $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" -Query `"$getToggleQuery`" -QueryTimeout $toggleQueryTimeout -MaxCharLength 150000 $authSqlCmdParams$trustServerCertificateFlag"
     Write-Output "Setting removeSchemaBindingSql"
     $removeSchemaBindingSql = "
         $setStatements
@@ -141,7 +129,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
 
 if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
     $sqlCmdParams = @(
-        "-ServerInstance `"$dbServer, $dbServerPort`""
+        "-ServerInstance `"$dbServer,$dbServerPort`""
         "-Database `"$dbName`""
         "-QueryTimeout $toggleQueryTimeout"
         "-Query `"$removeSchemaBindingSql`""
@@ -154,7 +142,7 @@ if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
     }
     
     $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
-    $paramsAsAString = $paramsAsAString.Replace('"', '')
+
     Write-Output "SQL Command to run: $paramsAsAString"
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
@@ -177,7 +165,7 @@ Write-Output "Toggling on schema binding"
 
 if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
     $sqlCmdParams = @(
-        "-ServerInstance `"$dbServer, $dbServerPort`""
+        "-ServerInstance `"$dbServer,$dbServerPort`""
         "-Database `"$dbName`""
         "-QueryTimeout $toggleQueryTimeout"
         "-Query `"$restoreSchemaBindingSql`""
@@ -190,7 +178,6 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
     }
     
     $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
-    $paramsAsAString = $paramsAsAString.Replace('"', '')
     Write-Output "SQL Command to run: $paramsAsAString"
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
