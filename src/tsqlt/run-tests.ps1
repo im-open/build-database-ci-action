@@ -85,11 +85,11 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     END CATCH;"
 
     Write-Output "Getting schemabinding toggle queries"
-    $trustServerCertificateFlag = ""
+    $trustServerCertificateFlag = ''
     if ($trustServerCertificate) {
-        $trustServerCertificateFlag += " -TrustServerCertificate"
+        $trustServerCertificateFlag += "-TrustServerCertificate"
     }
-    $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" -Query `"$getToggleQuery`" -QueryTimeout $toggleQueryTimeout -MaxCharLength 150000 $authSqlCmdParams$trustServerCertificateFlag"
+    $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" -Query `"$getToggleQuery`" -QueryTimeout $toggleQueryTimeout -MaxCharLength 150000 $authSqlCmdParams $trustServerCertificateFlag"
     Write-Output "Setting removeSchemaBindingSql"
     $removeSchemaBindingSql = "
         $setStatements
