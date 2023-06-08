@@ -77,7 +77,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     DECLARE @rebindSql VARCHAR(MAX);
 
     BEGIN TRY
-        EXEC DBA.usp_ToggleSchemaBindingBatch @objectList = N'$objectNames', @mode = 'VARIABLE', @isSchemaBoundOnly = 1, @unbindSql = @unbindSql OUTPUT, @rebindSql = @rebindSql OUTPUT;
+        EXEC DBA.usp_ToggleSchemaBindingBatch @objectList = '$objectNames', @mode = 'VARIABLE', @isSchemaBoundOnly = 1, @unbindSql = @unbindSql OUTPUT, @rebindSql = @rebindSql OUTPUT;
         SELECT @unbindSql as unbindSql, @rebindSql as rebindSql;
     END TRY
     BEGIN CATCH
@@ -85,11 +85,29 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     END CATCH;"
 
     Write-Output "Getting schemabinding toggle queries"
-    $trustServerCertificateFlag = ''
-    if ($trustServerCertificate) {
-        $trustServerCertificateFlag += "-TrustServerCertificate"
+    $sqlCmdParams = @(
+        "-ServerInstance `"$dbServer,$dbServerPort`""
+        "-Database `"$dbName`""
+        "-Query `"$getToggleQuery`""
+        "-QueryTimeout $toggleQueryTimeout"
+        "-MaxCharLength 150000"
+    )
+    if (-Not $useIntegratedSecurity) {
+        $sqlCmdParams += $authSqlCmdParams
     }
-    $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" -Query `"$getToggleQuery`" -QueryTimeout $toggleQueryTimeout -MaxCharLength 150000 $authSqlCmdParams $trustServerCertificateFlag"
+    if ($trustServerCertificate) {
+        $sqlCmdParams += "-TrustServerCertificate"
+    }
+    
+    $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
+    
+    $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd $sqlCmdParams"
+    # $trustServerCertificateFlag = ''
+    # if ($trustServerCertificate) {
+    #     $trustServerCertificateFlag += "-TrustServerCertificate"
+    # }
+    # $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" -Query `"$getToggleQuery`" -QueryTimeout $toggleQueryTimeout -MaxCharLength 150000 $authSqlCmdParams $trustServerCertificateFlag"
+
     Write-Output "Setting removeSchemaBindingSql"
     $removeSchemaBindingSql = "
         $setStatements
