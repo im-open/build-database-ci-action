@@ -107,7 +107,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
         $setStatements
         BEGIN TRY
             BEGIN TRANSACTION;
-            " + $toggleschemabinding.unbindSql + "
+            " + $toggleschemabinding.unbindSql, + "
             COMMIT TRANSACTION;
         END TRY
         BEGIN CATCH
@@ -154,6 +154,7 @@ if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
     }
     
     $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
+    $paramsAsAString = $paramsAsAString.Replace('"', '')
     Write-Output "SQL Command to run: $paramsAsAString"
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
@@ -189,6 +190,7 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
     }
     
     $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
+    $paramsAsAString = $paramsAsAString.Replace('"', '')
     Write-Output "SQL Command to run: $paramsAsAString"
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
