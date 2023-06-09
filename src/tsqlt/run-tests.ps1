@@ -88,7 +88,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     $sqlCmdParams = @(
         "-ServerInstance `"$dbServer,$dbServerPort`""
         "-Database `"$dbName`""
-        "-Query `"$($getToggleQuery.Replace('"', '`"'))`""
+        "-Query `"$getToggleQuery`""
         "-QueryTimeout $toggleQueryTimeout"
         "-MaxCharLength 150000"
     )
@@ -100,15 +100,16 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     }
     
     $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
-    Write-Output "103 SQL Command to run: $paramsAsAString"
     $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd $sqlCmdParams"
 
     Write-Output "Setting removeSchemaBindingSql"
+    $toggleschemabindingUnbindSql = $($toggleschemabinding.unbindSql).Replace('"', '`"')
+    $toggleschemabindingRebindSql = $($toggleschemabinding.rebindSql).Replace('"', '`"')
     $removeSchemaBindingSql = "
         $setStatements
         BEGIN TRY
             BEGIN TRANSACTION;
-            " + $toggleschemabinding.unbindSql + "
+            " + $toggleschemabindingUnbindSql + "
             COMMIT TRANSACTION;
         END TRY
         BEGIN CATCH
@@ -126,7 +127,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
         $setStatements
         BEGIN TRY
             BEGIN TRANSACTION;
-            " + $toggleschemabinding.rebindSql + "
+            " + $toggleschemabindingRebindSql + "
             COMMIT TRANSACTION;
         END TRY
         BEGIN CATCH
@@ -145,7 +146,7 @@ if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
         "-ServerInstance `"$dbServer,$dbServerPort`""
         "-Database `"$dbName`""
         "-QueryTimeout $toggleQueryTimeout"
-        "-Query `"$($removeSchemaBindingSql.Replace('"', '`"'))`""
+        "-Query `"$removeSchemaBindingSql`""
     )
     if (-Not $useIntegratedSecurity) {
         $sqlCmdParams += $authSqlCmdParams
@@ -180,7 +181,7 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
         "-ServerInstance `"$dbServer,$dbServerPort`""
         "-Database `"$dbName`""
         "-QueryTimeout $toggleQueryTimeout"
-        "-Query `"$($restoreSchemaBindingSql.Replace('"', '`"'))`""
+        "-Query `"$restoreSchemaBindingSql`""
     )
     if (-Not $useIntegratedSecurity) {
         $sqlCmdParams += $authSqlCmdParams
