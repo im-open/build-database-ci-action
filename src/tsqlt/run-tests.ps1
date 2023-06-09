@@ -100,7 +100,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     }
     
     $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
-    $paramsAsAString = $paramsAsAString.Replace('"', "``")
+    # $paramsAsAString = $paramsAsAString.Replace('"', "``")
     $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd $sqlCmdParams"
     # $trustServerCertificateFlag = ''
     # if ($trustServerCertificate) {
