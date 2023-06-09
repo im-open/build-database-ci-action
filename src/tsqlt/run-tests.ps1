@@ -105,6 +105,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     Write-Output "Setting removeSchemaBindingSql"
     $toggleschemabindingUnbindSql = $($toggleschemabinding.unbindSql).Replace('"', '`"')
     $toggleschemabindingRebindSql = $($toggleschemabinding.rebindSql).Replace('"', '`"')
+    
     $removeSchemaBindingSql = "
         $setStatements
         BEGIN TRY
