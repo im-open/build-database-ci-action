@@ -78,7 +78,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
 
     BEGIN TRY
         EXEC DBA.usp_ToggleSchemaBindingBatch @objectList = N'$objectNames', @mode = 'VARIABLE', @isSchemaBoundOnly = 1, @unbindSql = @unbindSql OUTPUT, @rebindSql = @rebindSql OUTPUT;
-        SELECT replace(@unbindSql,char(34),'`' + char(34)) as unbindSql, replace(@rebindSql,char(34),'`' + char(34)) as rebindSql;
+        SELECT @unbindSql as unbindSql, @rebindSql as rebindSql;
     END TRY
     BEGIN CATCH
         THROW;
@@ -140,24 +140,33 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
 }
 
 if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
-    $sqlCmdParams = @(
-        "-ServerInstance `"$dbServer,$dbServerPort`""
-        "-Database `"$dbName`""
-        "-QueryTimeout $toggleQueryTimeout"
-        "-Query `"$removeSchemaBindingSql`""
-    )
-    if (-Not $useIntegratedSecurity) {
-        $sqlCmdParams += $authSqlCmdParams
-    }
-    if ($trustServerCertificate) {
-        $sqlCmdParams += "-TrustServerCertificate"
-    }
+    # $sqlCmdParams = @(
+    #     "-ServerInstance `"$dbServer,$dbServerPort`""
+    #     "-Database `"$dbName`""
+    #     "-QueryTimeout $toggleQueryTimeout"
+    #     "-Query `"$removeSchemaBindingSql`""
+    # )
+    # if (-Not $useIntegratedSecurity) {
+    #     $sqlCmdParams += $authSqlCmdParams
+    # }
+    # if ($trustServerCertificate) {
+    #     $sqlCmdParams += "-TrustServerCertificate"
+    # }
     
-    $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
+    # $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
 
-    Write-Output "158 SQL Command to run: $paramsAsAString"
-    Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
+    # Write-Output "158 SQL Command to run: $paramsAsAString"
+    # Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
+    # Write-Output "158 SQL Command ran"
+    $trustServerCertificateFlag = ''
+    if ($trustServerCertificate) {
+        $trustServerCertificateFlag += "-TrustServerCertificate"
+    }
+    $getToggleQuery = $getToggleQuery.Replace('"', '`"')
+    Write-Output "158 SQL Command to run: $getToggleQuery"
+    $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" -Query `"$getToggleQuery`" -QueryTimeout $toggleQueryTimeout -MaxCharLength 150000 $authSqlCmdParams $trustServerCertificateFlag"
     Write-Output "158 SQL Command ran"
+
 }
 
 Write-Output "Running tSQLt tests"
