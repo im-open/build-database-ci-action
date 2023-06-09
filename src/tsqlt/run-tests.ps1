@@ -78,7 +78,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
 
     BEGIN TRY
         EXEC DBA.usp_ToggleSchemaBindingBatch @objectList = '$objectNames', @mode = 'VARIABLE', @isSchemaBoundOnly = 1, @unbindSql = @unbindSql OUTPUT, @rebindSql = @rebindSql OUTPUT;
-        SELECT @unbindSql as unbindSql, @rebindSql as rebindSql;
+        SELECT replace(@unbindSql,char(34),'`' + char(34)) as unbindSql, replace(@rebindSql,char(34),'`' + char(34)) as rebindSql;
     END TRY
     BEGIN CATCH
         THROW;
