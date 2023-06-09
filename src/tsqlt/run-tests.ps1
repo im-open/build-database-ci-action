@@ -44,7 +44,6 @@ $objectNames = (
     Get-Unique
 )
 $objectNames = $objectNames -join ','
-$objectNames = $objectNames.Replace('"', '`"')
 Write-Output $objectNames
 
 $toggleQueryTimeout = 120
@@ -100,7 +99,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
         $sqlCmdParams += "-TrustServerCertificate"
     }
     
-    $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
+    $paramsAsAString = [string]::Join(" ", $sqlCmdParams.Replace('"', '`"'))
     $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd $sqlCmdParams"
 
     Write-Output "Setting removeSchemaBindingSql"
@@ -154,7 +153,7 @@ if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
         $sqlCmdParams += "-TrustServerCertificate"
     }
     
-    $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
+    $paramsAsAString = [string]::Join(" ", $sqlCmdParams.Replace('"', '`"'))
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
 
@@ -188,7 +187,7 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
         $sqlCmdParams += "-TrustServerCertificate"
     }
     
-    $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
+    $paramsAsAString = [string]::Join(" ", $sqlCmdParams.Replace('"', '`"'))
     Write-Output "SQL Command to run: $paramsAsAString"
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
