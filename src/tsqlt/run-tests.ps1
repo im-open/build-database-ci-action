@@ -88,7 +88,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     $sqlCmdParams = @(
         "-ServerInstance `"$dbServer,$dbServerPort`""
         "-Database `"$dbName`""
-        "-Query '$getToggleQuery'"
+        "-Query `"$($getToggleQuery.Replace('"', '`"'))`""
         "-QueryTimeout $toggleQueryTimeout"
         "-MaxCharLength 150000"
     )
@@ -145,7 +145,7 @@ if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
         "-ServerInstance `"$dbServer,$dbServerPort`""
         "-Database `"$dbName`""
         "-QueryTimeout $toggleQueryTimeout"
-        "-Query '$removeSchemaBindingSql'"
+        "-Query `"$($removeSchemaBindingSql.Replace('"', '`"'))`""
     )
     if (-Not $useIntegratedSecurity) {
         $sqlCmdParams += $authSqlCmdParams
@@ -180,7 +180,7 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
         "-ServerInstance `"$dbServer,$dbServerPort`""
         "-Database `"$dbName`""
         "-QueryTimeout $toggleQueryTimeout"
-        "-Query '$restoreSchemaBindingSql'"
+        "-Query `"$($restoreSchemaBindingSql.Replace('"', '`"'))`""
     )
     if (-Not $useIntegratedSecurity) {
         $sqlCmdParams += $authSqlCmdParams
