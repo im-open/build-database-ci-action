@@ -88,7 +88,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     $sqlCmdParams = @(
         "-ServerInstance `"$dbServer,$dbServerPort`""
         "-Database `"$dbName`""
-        "-Query `"$getToggleQuery`""
+        "-Query '$getToggleQuery'"
         "-QueryTimeout $toggleQueryTimeout"
         "-MaxCharLength 150000"
     )
@@ -99,7 +99,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
         $sqlCmdParams += "-TrustServerCertificate"
     }
     
-    $paramsAsAString = [string]::Join(" ", $sqlCmdParams.Replace('"', '`"'))
+    $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
     Write-Output "103 SQL Command to run: $paramsAsAString"
     $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd $sqlCmdParams"
 
@@ -145,7 +145,7 @@ if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
         "-ServerInstance `"$dbServer,$dbServerPort`""
         "-Database `"$dbName`""
         "-QueryTimeout $toggleQueryTimeout"
-        "-Query `"$removeSchemaBindingSql`""
+        "-Query '$removeSchemaBindingSql'"
     )
     if (-Not $useIntegratedSecurity) {
         $sqlCmdParams += $authSqlCmdParams
@@ -154,7 +154,7 @@ if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
         $sqlCmdParams += "-TrustServerCertificate"
     }
     
-    $paramsAsAString = [string]::Join(" ", $sqlCmdParams.Replace('"', '`"'))
+    $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
     Write-Output "158 SQL Command to run: $paramsAsAString"
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
@@ -180,7 +180,7 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
         "-ServerInstance `"$dbServer,$dbServerPort`""
         "-Database `"$dbName`""
         "-QueryTimeout $toggleQueryTimeout"
-        "-Query `"$restoreSchemaBindingSql`""
+        "-Query '$restoreSchemaBindingSql'"
     )
     if (-Not $useIntegratedSecurity) {
         $sqlCmdParams += $authSqlCmdParams
@@ -189,7 +189,7 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
         $sqlCmdParams += "-TrustServerCertificate"
     }
     
-    $paramsAsAString = [string]::Join(" ", $sqlCmdParams.Replace('"', '`"'))
+    $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
     Write-Output "193 SQL Command to run: $paramsAsAString"
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
