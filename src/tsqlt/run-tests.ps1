@@ -77,7 +77,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     DECLARE @rebindSql VARCHAR(MAX);
 
     BEGIN TRY
-        EXEC DBA.usp_ToggleSchemaBindingBatch @objectList = '$objectNames', @mode = 'VARIABLE', @isSchemaBoundOnly = 1, @unbindSql = @unbindSql OUTPUT, @rebindSql = @rebindSql OUTPUT;
+        EXEC DBA.usp_ToggleSchemaBindingBatch @objectList = N'$objectNames', @mode = 'VARIABLE', @isSchemaBoundOnly = 1, @unbindSql = @unbindSql OUTPUT, @rebindSql = @rebindSql OUTPUT;
         SELECT replace(@unbindSql,char(34),'`' + char(34)) as unbindSql, replace(@rebindSql,char(34),'`' + char(34)) as rebindSql;
     END TRY
     BEGIN CATCH
@@ -100,13 +100,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     }
     
     $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
-    # $paramsAsAString = $paramsAsAString.Replace('"', "``")
     $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd $sqlCmdParams"
-    # $trustServerCertificateFlag = ''
-    # if ($trustServerCertificate) {
-    #     $trustServerCertificateFlag += "-TrustServerCertificate"
-    # }
-    # $toggleschemabinding = Invoke-Expression -Command "Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" -Query `"$getToggleQuery`" -QueryTimeout $toggleQueryTimeout -MaxCharLength 150000 $authSqlCmdParams $trustServerCertificateFlag"
 
     Write-Output "Setting removeSchemaBindingSql"
     $removeSchemaBindingSql = "
@@ -161,8 +155,9 @@ if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
     
     $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
 
-    Write-Output "SQL Command to run: $paramsAsAString"
+    Write-Output "158 SQL Command to run: $paramsAsAString"
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
+    Write-Output "158 SQL Command ran"
 }
 
 Write-Output "Running tSQLt tests"
