@@ -105,7 +105,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
     Write-Output "Setting removeSchemaBindingSql"
     $toggleschemabindingUnbindSql = $($toggleschemabinding.unbindSql).Replace('"', '`"')
     $toggleschemabindingRebindSql = $($toggleschemabinding.rebindSql).Replace('"', '`"')
-    
+
     $removeSchemaBindingSql = "
         $setStatements
         BEGIN TRY
@@ -157,7 +157,6 @@ if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
     }
     
     $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
-    Write-Output "158 SQL Command to run: $paramsAsAString"
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
 
@@ -192,6 +191,5 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
     }
     
     $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
-    Write-Output "193 SQL Command to run: $paramsAsAString"
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
