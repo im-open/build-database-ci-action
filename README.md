@@ -69,7 +69,7 @@ jobs:
 
       - name: Build Database
         # You may also reference the major or major.minor version
-        uses: im-open/build-database-ci-action@v3.2.4
+        uses: im-open/build-database-ci-action@v3.3.0
         with:
           db-server-name: localhost
           db-server-port: 1433
@@ -109,7 +109,7 @@ jobs:
 
       - name: Build Database
         # You may also reference the major or major.minor version
-        uses: im-open/build-database-ci-action@v3.2.4
+        uses: im-open/build-database-ci-action@v3.3.0
         with:
           db-server-name: localhost
           db-server-port: 1433

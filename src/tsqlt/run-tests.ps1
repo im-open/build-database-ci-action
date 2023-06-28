@@ -172,8 +172,6 @@ Write-Output "Running tSQLt tests"
     -username $username `
     -password $password
 
-& $PSScriptRoot/print-results.ps1
-
 Write-Output "Toggling on schema binding"
 
 if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
@@ -193,3 +191,5 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
     $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
+
+& $PSScriptRoot/print-results.ps1
