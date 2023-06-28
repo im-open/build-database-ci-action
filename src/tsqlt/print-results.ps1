@@ -24,3 +24,10 @@ if ($null -ne $resultXml) {
 Write-Output "Number of tests: $totalTests"
 Write-Output "Number of failures: $numFailed"
 Write-Output "Number of errors: $numErrored"
+
+if ($numFailed -gt 0) {
+    throw "Some tests failed!"
+}
+if ($numErrored -gt 0) {
+    throw "Some tests had errors!"
+}
