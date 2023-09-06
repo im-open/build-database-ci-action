@@ -55,8 +55,8 @@ jobs:
       # The directories that contain source code for the action.  Only dirs with files that affect the action's
       # execution should be included like src or dist.  Do not include dirs like .github or node_modules.
       # ** This value must match the same dirs-with-code argument specified in increment-version-on-merge.yml.
-      dirs-with-code: ''
+      dirs-with-code: 'src'
 
       # The npm script to run to build the action.  This is typically 'npm run build' if the
       # action needs to be compiled.  For composite-run-steps actions this is typically empty.
-      build-command: 'src'
+      build-command: ''
