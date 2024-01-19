@@ -31,7 +31,6 @@ $runTestsSql = "
     "
 
 $getTestResultsSql = "
-    :XML ON
     EXEC [tSQLt].[XmlResultFormatter];
     "
 
@@ -55,7 +54,7 @@ if ($trustServerCertificate) {
 try {
     Write-Output "Executing tSQLt tests"
     Invoke-Expression "& sqlcmd $authParams -S `"$dbServer,$dbServerPort`" -d `"$dbName`" -Q `"$runTestsSql`" $queryTimeoutParam"
-    $results = Invoke-Expression "& sqlcmd $authParams -b -S `"$dbServer,$dbServerPort`" -d `"$dbName`" -h-1 -I -Q `"$getTestResultsSql`" $queryTimeoutParam"
+    $results = Invoke-Expression "& sqlcmd $authParams -b -S `"$dbServer,$dbServerPort`" -d `"$dbName`" -h-1 -I -Q `"$getTestResultsSql`" $queryTimeoutParam" | ConvertTo-Xml -As String
 
     # Catch when an error happens in the test run (e.g. query timeout)
     if ($results -notlike "*testsuites*") {

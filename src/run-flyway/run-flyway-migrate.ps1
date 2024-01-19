@@ -21,7 +21,11 @@ Write-Information -InformationAction Continue -MessageData "Running migrate..."
 
 $resolvedPaths = New-Object -TypeName "System.Collections.ArrayList"
 $pathToMigrationFiles.Split(",") | ForEach-Object {
-    $resolvedPaths.Add("filesystem:`"$(Resolve-Path $_)`"")
+    if ([System.Environment]::OSVersion.Platform -eq "Unix") {
+        $resolvedPaths.Add("filesystem:$(Resolve-Path $_)")
+    } else {
+        $resolvedPaths.Add("filesystem:`"$(Resolve-Path $_)`"")
+    }
 }
 
 $flywayLocations = $resolvedPaths -Join ','
