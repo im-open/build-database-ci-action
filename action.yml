@@ -97,6 +97,7 @@ runs:
       run: |
         $trustServerCertificate = "${{ inputs.trust-server-certificate }}"
         "trust_server_certificate=$trustServerCertificate" >> $env:GITHUB_OUTPUT
+        Write-Output "Trusted server certificate: $trustServerCertificate"
 
     - name: Install SQL Powershell Module
       shell: pwsh
@@ -120,6 +121,7 @@ runs:
       shell: pwsh
       run: |
         Write-Output "Creating the database"
+        Write-Output "Trusted server certificate within action yml: $trustServerCertificate"
         [System.Security.SecureString] $securePassword = if(!!"${{ inputs.db-password }}") { ConvertTo-SecureString "${{ inputs.db-password }}" -AsPlainText -Force } else { $null }
 
         ${{ github.action_path }}/src/create-db/create-db.ps1 `
