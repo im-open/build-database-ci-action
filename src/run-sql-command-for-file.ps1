@@ -4,7 +4,7 @@ param (
     [string]$pathToFile,
     [string]$sqlCmdVariables,
     [switch]$useIntegratedSecurity = $false,
-    [switch]$trustServerCertificate = $false,
+    [switch]$trustServerCertificate = $true,
     [string]$username,
     [securestring]$password
 )
