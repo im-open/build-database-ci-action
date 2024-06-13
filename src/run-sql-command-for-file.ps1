@@ -39,4 +39,6 @@ $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
 
 Write-Output "Did Buffalo bandits make it right before invoke-expression"
 
+Write-Output "Trusted Certifcate value: $trustServerCertificate"
+
 Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
