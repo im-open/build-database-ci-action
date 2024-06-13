@@ -4,7 +4,7 @@ param (
     [string]$pathToFile,
     [string]$sqlCmdVariables,
     [switch]$useIntegratedSecurity = $false,
-    [switch]$trustServerCertificate = $true,
+    [switch]$trustServerCertificate = $false,
     [string]$username,
     [securestring]$password
 )
@@ -31,6 +31,7 @@ if (!$useIntegratedSecurity) {
     $sqlCmdParams += "-Password $plainPassword"
 }
 
+$trustServerCertificate = $true
 if ($trustServerCertificate) {
     $sqlCmdParams += "-TrustServerCertificate"
 }
