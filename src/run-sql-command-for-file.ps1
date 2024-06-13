@@ -37,4 +37,6 @@ if ($trustServerCertificate) {
 
 $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
 
+Write-Output "Did Buffalo bandits make it right before invoke-expression"
+
 Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
