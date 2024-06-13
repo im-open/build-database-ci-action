@@ -30,6 +30,7 @@ if (!$useIntegratedSecurity) {
     $sqlCmdParams += "-Password $plainPassword"
 }
 
+$trustServerCertificate = $true
 if ($trustServerCertificate) {
     $sqlCmdParams += "-TrustServerCertificate"
 }
