@@ -14,6 +14,8 @@ $ErrorActionPreference = "Stop"
 $resultsfolder = Join-Path $PSScriptRoot "../test-results"
 $resultsFile = Join-Path $resultsfolder "test-results.xml"
 
+Write-Output "Woohoo, hitting chad's testing branch"
+
 if (!(Test-Path $resultsfolder)) {
     New-Item $resultsfolder -ItemType Directory
 }
