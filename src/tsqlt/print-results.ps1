@@ -20,6 +20,9 @@ if ($null -ne $resultXml) {
         }
     }
 }
+else {
+    Write-Output "Test Results file not found at $resultXmlPath"
+}
 
 Write-Output "Number of tests: $totalTests"
 Write-Output "Number of failures: $numFailed"
