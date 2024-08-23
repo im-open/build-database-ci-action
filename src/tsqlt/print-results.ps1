@@ -28,6 +28,8 @@ Write-Output "Number of tests: $totalTests"
 Write-Output "Number of failures: $numFailed"
 Write-Output "Number of errors: $numErrored"
 
+Write-Output $resultXml
+
 if ($numFailed -gt 0) {
     throw "Some tests failed!"
 }
