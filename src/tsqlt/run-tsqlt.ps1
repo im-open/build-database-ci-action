@@ -61,4 +61,8 @@ finally {
     if ($regex.Success) {
         $regex.captures.groups[0].value > $resultsFile
     }
+    else{
+        Write-Output $results
+        throw "Unable to parse testsuites from XML"
+    }
 }
