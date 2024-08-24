@@ -6,21 +6,12 @@ param (
     [switch]$useIntegratedSecurity = $false,
     [switch]$trustServerCertificate = $false,
     [string]$username,
-    [SecureString]$password
+    [SecureString]$password,
+    [string]$resultsFile
 )
 
 $ErrorActionPreference = "Stop"
 
-$resultsfolder = Join-Path $PSScriptRoot "../test-results"
-$resultsFile = Join-Path $resultsfolder "test-results.xml"
-
-if (!(Test-Path $resultsfolder)) {
-    New-Item $resultsfolder -ItemType Directory
-}
-
-if (!(Test-Path $resultsFile)) {
-    New-Item -ItemType File -Force -Path $resultsFile
-}
 
 $runTestsSql = "
     IF EXISTS (SELECT * FROM sys.objects WHERE OBJECT_ID = OBJECT_ID(N'[tSQLt].[RunAll]')

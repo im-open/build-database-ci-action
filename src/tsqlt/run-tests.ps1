@@ -162,6 +162,17 @@ if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
 
 Write-Output "Running tSQLt tests"
 
+$resultsfolder = Join-Path $PSScriptRoot "../test-results"
+$resultsFile = Join-Path $resultsfolder "test-results.xml"
+
+if (!(Test-Path $resultsfolder)) {
+    New-Item $resultsfolder -ItemType Directory
+}
+
+if (!(Test-Path $resultsFile)) {
+    New-Item -ItemType File -Force -Path $resultsFile
+}
+
 & $PSScriptRoot/run-tsqlt.ps1 `
     -dbServer $dbServer `
     -dbServerPort $dbServerPort `
@@ -170,7 +181,8 @@ Write-Output "Running tSQLt tests"
     -useIntegratedSecurity:$useIntegratedSecurity `
     -trustServerCertificate:$trustServerCertificate `
     -username $username `
-    -password $password
+    -password $password `
+    -resultsFile $resultsFile
 
 Write-Output "Toggling on schema binding"
 
@@ -192,4 +204,4 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
 
-& $PSScriptRoot/print-results.ps1
+& $PSScriptRoot/print-results.ps1 -resultsFile $resultsFile

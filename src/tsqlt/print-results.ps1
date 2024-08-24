@@ -1,9 +1,12 @@
+param (
+    [string]$resultsFile
+)
+
 $numErrored = 0
 $numFailed = 0
 $totalTests = 0
-$resultXmlPath = Join-Path $PSScriptRoot "../test-results/test-results.xml"
 
-[xml]$resultXml = Get-Content $resultXmlPath
+[xml]$resultXml = Get-Content $resultsFile
 if ($null -ne $resultXml) {
     foreach ($testsuite in $resultXml.testsuites.testsuite) {
         $numErrored += $testsuite.errors
@@ -21,14 +24,12 @@ if ($null -ne $resultXml) {
     }
 }
 else {
-    Write-Output "Test Results file not found at $resultXmlPath"
+    Write-Output "Test Results file not found at $resultsFile"
 }
 
 Write-Output "Number of tests: $totalTests"
 Write-Output "Number of failures: $numFailed"
 Write-Output "Number of errors: $numErrored"
-
-Write-Output $resultXml
 
 if ($numFailed -gt 0) {
     throw "Some tests failed!"
