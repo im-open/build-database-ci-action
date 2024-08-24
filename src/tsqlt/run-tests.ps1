@@ -162,7 +162,7 @@ if (-Not [string]::IsNullOrEmpty($removeSchemaBindingSql)) {
 
 Write-Output "Running tSQLt tests"
 
-$resultsfolder = Join-Path $PSScriptRoot "../test-results"
+$resultsfolder = Join-Path $PSScriptRoot "test-results"
 $resultsFile = Join-Path $resultsfolder "test-results.xml"
 
 if (!(Test-Path $resultsfolder)) {
