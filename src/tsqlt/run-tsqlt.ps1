@@ -47,6 +47,9 @@ try {
     Invoke-Expression "& sqlcmd $authParams -S `"$dbServer,$dbServerPort`" -d `"$dbName`" -Q `"$runTestsSql`" $queryTimeoutParam"
     $results = Invoke-Expression "& sqlcmd $authParams -b -S `"$dbServer,$dbServerPort`" -d `"$dbName`" -h-1 -I -Q `"$getTestResultsSql`" $queryTimeoutParam" #| ConvertTo-Xml -As String
 
+    Write-Output "Value of xml results:"
+    $results
+
     # Catch when an error happens in the test run (e.g. query timeout)
     if ($results -notlike "*testsuites*") {
         throw $results
