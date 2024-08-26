@@ -21,8 +21,7 @@ $runTestsSql = "
     END;
     "
 
-$getTestResultsSql = "
-    :XML ON
+$getTestResultsSql = ":XML ON
     EXEC [tSQLt].[XmlResultFormatter];
     "
 
