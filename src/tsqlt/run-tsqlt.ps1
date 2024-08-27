@@ -2,7 +2,7 @@ param (
     [string]$dbServer,
     [string]$dbServerPort,
     [string]$dbName,
-    [string]$queryTimeout = 0,
+    [int]$queryTimeout = 0,
     [switch]$useIntegratedSecurity = $false,
     [switch]$trustServerCertificate = $false,
     [string]$username,
