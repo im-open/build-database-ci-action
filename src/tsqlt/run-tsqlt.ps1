@@ -80,7 +80,7 @@ finally {
         $resultsDetail = Invoke-Expression "& Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" $authParams_PS -Query `"$getErrorDetailSql`" -QueryTimeout $queryTimeout"
  
         foreach ($testResult in $resultsDetail) {
-            Write-Output "$($testResult.Name) $(TestResult.Result.ToUpper())!`nMessage: $($testResult.Msg)`n"
+            Write-Output "$($testResult.Name) $(TestResult.Result)!`nMessage: $($testResult.Msg)`n"
         }
     }
 }
