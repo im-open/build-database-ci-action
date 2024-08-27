@@ -2,7 +2,7 @@ param (
     [string]$dbServer,
     [string]$dbServerPort,
     [string]$dbName,
-    [string]$queryTimeout,
+    [string]$queryTimeout = 0,
     [switch]$useIntegratedSecurity = $false,
     [switch]$trustServerCertificate = $false,
     [string]$username,
@@ -21,51 +21,66 @@ $runTestsSql = "
     END;
     "
 
-$getTestResultsSql = ":XML ON
-    EXEC [tSQLt].[XmlResultFormatter];
+$getResultSummarySql = "
+    SELECT
+        TestCaseSummary.Msg,
+        TestCaseSummary.Cnt,
+        TestCaseSummary.SuccessCnt,
+        TestCaseSummary.SkippedCnt,
+        TestCaseSummary.FailCnt,
+        TestCaseSummary.ErrorCnt
+    FROM tSQLt.TestCaseSummary();
+    "
+$getErrorDetailSql = "
+    SELECT
+        TestResult.Name,
+        TestResult.Result,
+        TestResult.Msg
+    FROM tSQLt.TestResult
+    WHERE TestResult.Result IN ('Failure', 'Error')
     "
 
 $queryTimeoutParam = if ($queryTimeout) { "-t $queryTimeout" } else { "" }
-$authParams = ""
+$authParams_sqlcmd = ""
+$authParams_PS = ""
 
 if ($useIntegratedSecurity) {
-    $authParams = "-E"
+    $authParams_sqlcmd = "-E"
 }
 else {
     $cred = New-Object System.Management.Automation.PSCredential -ArgumentList $username, $password
     $plainPassword = $cred.GetNetworkCredential().Password
 
-    $authParams = "-U `"$username`" -P `"$plainPassword`""
+    $authParams_sqlcmd = "-U `"$username`" -P `"$plainPassword`""
+    $authParams_PS = "-Credential `"$cred`""
 }
 
 if ($trustServerCertificate) {
-    $authParams += " -C"
+    $authParams_sqlcmd += " -C"
+    $authParams_PS += " -TrustServerCertificate"
 }
 
 try {
     Write-Output "Executing tSQLt tests"
-    Invoke-Expression "& sqlcmd $authParams -S `"$dbServer,$dbServerPort`" -d `"$dbName`" -Q `"$runTestsSql`" $queryTimeoutParam"
-    $results = Invoke-Expression "& sqlcmd $authParams -b -S `"$dbServer,$dbServerPort`" -d `"$dbName`" -h-1 -I -Q `"$getTestResultsSql`" $queryTimeoutParam" #| ConvertTo-Xml -As String
+    Invoke-Expression "& sqlcmd $authParams_sqlcmd -S `"$dbServer,$dbServerPort`" -d `"$dbName`" -Q `"$runTestsSql`" $queryTimeoutParam"
+    
+    $resultSummary = Invoke-Expression "& Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" $authParams_PS -Query `"$getResultSummarySql`" -QueryTimeout $queryTimeout"
 
-    Write-Output "Value of xml results:"
-    $results
-
-    # Catch when an error happens in the test run (e.g. query timeout)
-    if ($results -notlike "*testsuites*") {
-        throw $results
-    }
 }
 catch {
     Write-Output $_.Exception
     throw
 }
 finally {
-    $regex = [regex]::Match($results, '<testsuites>[\s\S]+<\/testsuites>')
-    if ($regex.Success) {
-        $regex.captures.groups[0].value > $resultsFile
+    # Catch when an error happens in the test run (e.g. query timeout)
+    if ($resultSummary.Count -eq 0) {
+        throw "A fatal error occurred that prevented the reporting of results"
     }
-    else{
-        Write-Output $results
-        throw "Unable to parse testsuites from XML"
+    else {
+        $resultsDetail = Invoke-Expression "& Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" $authParams_PS -Query `"$getErrorDetailSql`" -QueryTimeout $queryTimeout"
+ 
+        foreach ($testResult in $resultsDetail) {
+            Write-Output "$($testResult.Name) $(TestResult.Result.ToUpper())!`nMessage: $($testResult.Msg)`n"
+        }
     }
 }
