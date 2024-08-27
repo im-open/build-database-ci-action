@@ -204,4 +204,4 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
 
-& $PSScriptRoot/print-results.ps1 -resultsFile $resultsFile
+# & $PSScriptRoot/print-results.ps1 -resultsFile $resultsFile

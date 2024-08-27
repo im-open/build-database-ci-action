@@ -77,10 +77,13 @@ finally {
         throw "A fatal error occurred that prevented the reporting of results"
     }
     else {
-        $resultsDetail = Invoke-Expression "& Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" $authParams_PS -Query `"$getErrorDetailSql`" -QueryTimeout $queryTimeout"
+        $errorDetail = Invoke-Expression "& Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" $authParams_PS -Query `"$getErrorDetailSql`" -QueryTimeout $queryTimeout"
  
-        foreach ($testResult in $resultsDetail) {
-            Write-Output "$($testResult.Name) $($testResult.Result.ToUpper())!`nMessage: $($testResult.Msg)`n"
+        if ($errorDetail.Count -gt 0){
+            foreach ($testResult in $errorDetail) {
+                Write-Output "$($testResult.Name) $($testResult.Result.ToUpper())!`nMessage: $($testResult.Msg)`n"
+            }
+            throw "Some tests failed or had errors."
         }
     }
 }
