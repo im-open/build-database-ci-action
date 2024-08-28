@@ -51,7 +51,7 @@ else {
     $plainPassword = $cred.GetNetworkCredential().Password
 
     $authParams_sqlcmd = "-U `"$username`" -P `"$plainPassword`""
-    $authParams_PS = "-Credential `"$cred`""
+    $authParams_PS = "-Username `"$username`" -Password `"$password`""
 }
 
 if ($trustServerCertificate) {
