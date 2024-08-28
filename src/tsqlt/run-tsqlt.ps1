@@ -6,8 +6,7 @@ param (
     [switch]$useIntegratedSecurity = $false,
     [switch]$trustServerCertificate = $false,
     [string]$username,
-    [SecureString]$password,
-    [string]$resultsFile
+    [SecureString]$password
 )
 
 $ErrorActionPreference = "Stop"
@@ -81,7 +80,7 @@ finally {
  
         if ($errorDetail.Count -gt 0){
             foreach ($testResult in $errorDetail) {
-                Write-Output "$($testResult.Name) $($testResult.Result.ToUpper())!`nMessage: $($testResult.Msg)`n"
+                Write-Output "$($testResult.Name) $($testResult.Result.ToUpper())!`nMessage: $($testResult.Msg)`n`n"
             }
             throw "Some tests failed or had errors."
         }
