@@ -25,7 +25,6 @@ $getResultSummarySql = "
         TestCaseSummary.Msg,
         TestCaseSummary.Cnt,
         TestCaseSummary.SuccessCnt,
-        TestCaseSummary.SkippedCnt,
         TestCaseSummary.FailCnt,
         TestCaseSummary.ErrorCnt
     FROM tSQLt.TestCaseSummary();
