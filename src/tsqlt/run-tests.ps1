@@ -4,7 +4,7 @@ param (
     [string]$dbName,
     [string]$pathToTests,
     [string]$managedSchemas,
-    [int]$testTimeout = 30,
+    [int]$testTimeout,
     [switch]$useIntegratedSecurity = $false,
     [switch]$trustServerCertificate = $false,
     [string]$username,

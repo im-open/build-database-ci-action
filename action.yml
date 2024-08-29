@@ -176,7 +176,7 @@ runs:
           -dbName "${{ inputs.db-name }}" `
           -pathToTests "${{ inputs.test-files-path }}" `
           -managedSchemas "${{ inputs.managed-schemas }}" `
-          -queryTimeout "${{ inputs.test-timeout }}" `
+          -testTimeout "${{ inputs.test-timeout }}" `
           -useIntegratedSecurity:$${{ steps.set-auth-method.outputs.use_integrated_security }} `
           -trustServerCertificate:$${{ steps.trust-server-certificate.outputs.trust_server_certificate }} `
           -username "${{ inputs.db-username }}" `
