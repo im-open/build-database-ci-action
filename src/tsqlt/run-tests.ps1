@@ -4,7 +4,7 @@ param (
     [string]$dbName,
     [string]$pathToTests,
     [string]$managedSchemas,
-    [string]$testTimeout,
+    [int]$testTimeout,
     [switch]$useIntegratedSecurity = $false,
     [switch]$trustServerCertificate = $false,
     [string]$username,
@@ -191,5 +191,3 @@ if (-Not [string]::IsNullOrEmpty($restoreSchemaBindingSql)) {
     $paramsAsAString = [string]::Join(" ", $sqlCmdParams)
     Invoke-Expression -Command "Invoke-Sqlcmd $paramsAsAString"
 }
-
-& $PSScriptRoot/print-results.ps1

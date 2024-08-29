@@ -2,7 +2,7 @@ param (
     [string]$dbServer,
     [string]$dbServerPort,
     [string]$dbName,
-    [string]$queryTimeout,
+    [int]$queryTimeout = 0,
     [switch]$useIntegratedSecurity = $false,
     [switch]$trustServerCertificate = $false,
     [string]$username,
@@ -11,16 +11,6 @@ param (
 
 $ErrorActionPreference = "Stop"
 
-$resultsfolder = Join-Path $PSScriptRoot "../test-results"
-$resultsFile = Join-Path $resultsfolder "test-results.xml"
-
-if (!(Test-Path $resultsfolder)) {
-    New-Item $resultsfolder -ItemType Directory
-}
-
-if (!(Test-Path $resultsFile)) {
-    New-Item -ItemType File -Force -Path $resultsFile
-}
 
 $runTestsSql = "
     IF EXISTS (SELECT * FROM sys.objects WHERE OBJECT_ID = OBJECT_ID(N'[tSQLt].[RunAll]')
@@ -30,44 +20,68 @@ $runTestsSql = "
     END;
     "
 
-$getTestResultsSql = "
-    EXEC [tSQLt].[XmlResultFormatter];
+$getResultSummarySql = "
+    SELECT
+        TestCaseSummary.Msg,
+        TestCaseSummary.Cnt,
+        TestCaseSummary.SuccessCnt,
+        TestCaseSummary.FailCnt,
+        TestCaseSummary.ErrorCnt
+    FROM tSQLt.TestCaseSummary();
+    "
+$getErrorDetailSql = "
+    SELECT
+        TestResult.Name,
+        TestResult.Result,
+        TestResult.Msg
+    FROM tSQLt.TestResult
+    WHERE TestResult.Result IN ('Failure', 'Error')
     "
 
 $queryTimeoutParam = if ($queryTimeout) { "-t $queryTimeout" } else { "" }
-$authParams = ""
+$authParams_sqlcmd = ""
+$authParams_PS = ""
 
 if ($useIntegratedSecurity) {
-    $authParams = "-E"
+    $authParams_sqlcmd = "-E"
 }
 else {
     $cred = New-Object System.Management.Automation.PSCredential -ArgumentList $username, $password
     $plainPassword = $cred.GetNetworkCredential().Password
 
-    $authParams = "-U `"$username`" -P `"$plainPassword`""
+    $authParams_sqlcmd = "-U `"$username`" -P `"$plainPassword`""
+    $authParams_PS = "-Username `"$username`" -Password `"$plainPassword`""
 }
 
 if ($trustServerCertificate) {
-    $authParams += " -C"
+    $authParams_sqlcmd += " -C"
+    $authParams_PS += " -TrustServerCertificate"
 }
 
 try {
     Write-Output "Executing tSQLt tests"
-    Invoke-Expression "& sqlcmd $authParams -S `"$dbServer,$dbServerPort`" -d `"$dbName`" -Q `"$runTestsSql`" $queryTimeoutParam"
-    $results = Invoke-Expression "& sqlcmd $authParams -b -S `"$dbServer,$dbServerPort`" -d `"$dbName`" -h-1 -I -Q `"$getTestResultsSql`" $queryTimeoutParam" | ConvertTo-Xml -As String
+    Invoke-Expression "& sqlcmd $authParams_sqlcmd -S `"$dbServer,$dbServerPort`" -d `"$dbName`" -Q `"$runTestsSql`" $queryTimeoutParam"
+    
+    $resultSummary = Invoke-Expression "& Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" $authParams_PS -Query `"$getResultSummarySql`" -QueryTimeout $queryTimeout"
 
-    # Catch when an error happens in the test run (e.g. query timeout)
-    if ($results -notlike "*testsuites*") {
-        throw $results
-    }
 }
 catch {
     Write-Output $_.Exception
     throw
 }
 finally {
-    $regex = [regex]::Match($results, '<testsuites>[\s\S]+<\/testsuites>')
-    if ($regex.Success) {
-        $regex.captures.groups[0].value > $resultsFile
+    # Catch when an error happens in the test run (e.g. query timeout)
+    if ($resultSummary.Count -eq 0) {
+        throw "A fatal error occurred that prevented the reporting of results"
+    }
+    else {
+        $errorDetail = Invoke-Expression "& Invoke-Sqlcmd -ServerInstance `"$dbServer,$dbServerPort`" -Database `"$dbName`" $authParams_PS -Query `"$getErrorDetailSql`" -QueryTimeout $queryTimeout"
+ 
+        if ($errorDetail.Count -gt 0){
+            foreach ($testResult in $errorDetail) {
+                Write-Output "$($testResult.Name) $($testResult.Result.ToUpper())!`nMessage: $($testResult.Msg)`n`n"
+            }
+            throw "Some tests failed or had errors."
+        }
     }
 }
