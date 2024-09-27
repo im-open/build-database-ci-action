@@ -60,7 +60,7 @@ The `mock-db-object-dependency-list` should be a json array of objects with the 
 ```yml
 jobs:
   build-database:
-    runs-on: [self-hosted, ubuntu-20.04]
+    runs-on: im-linux
     steps:
       - uses: actions/checkout@v3
 
@@ -100,7 +100,7 @@ If your migration script are spread over multiple directories, and there isn't a
 ```yml
 jobs:
   build-database:
-    runs-on: [self-hosted, ubuntu-20.04]
+    runs-on: im-linux
     steps:
       - uses: actions/checkout@v3
 
