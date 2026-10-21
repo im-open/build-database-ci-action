@@ -90,7 +90,7 @@ if (-Not [string]::IsNullOrEmpty($objectNames)) {
         "-Database `"$dbName`""
         "-Query `"$getToggleQuery`""
         "-QueryTimeout $toggleQueryTimeout"
-        "-MaxCharLength 150000"
+        "-MaxCharLength 2147483647"
     )
     if (-Not $useIntegratedSecurity) {
         $sqlCmdParams += $authSqlCmdParams
